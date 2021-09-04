@@ -191,6 +191,8 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
     }
     
     private onRtcOfferFromSignaller({ routerId, originatorInfo, description, connectionId }: OfferOptions): void {
+        if (this.stopped) { return }
+
         const { peerId } = originatorInfo
         
         let connection: WebRtcConnection
@@ -206,8 +208,10 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             this.connections[peerId] = connection
 
         } else if (this.connections[peerId].getConnectionId() !== 'none') {
-            connection = this.replaceConnection(peerId, routerId)
+            const replacedConnection = this.replaceConnection(peerId, routerId)
 
+            if (!replacedConnection) { return }
+            connection = replacedConnection
         } else {
             connection = this.connections[peerId]
         }
@@ -266,7 +270,9 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
         }
     }
 
-    private replaceConnection(peerId: string, routerId: string, newConnectionId?: string): WebRtcConnection {
+    private replaceConnection(peerId: string, routerId: string, newConnectionId?: string): WebRtcConnection | void {
+        if (this.stopped) { return }
+
         // Close old connection
         const conn = this.connections[peerId]
         let deferredConnectionAttempt = null
@@ -336,7 +342,7 @@ export class WebRtcEndpoint extends EventEmitter implements IWebRtcEndpoint {
             this.rtcSignaller.sendRtcConnect(routerId, connection.getPeerId())
         }
 
-        const deferredAttempt = connection.getDeferredConnectionAttempt() 
+        const deferredAttempt = connection.getDeferredConnectionAttempt()
         if (deferredAttempt) {
             return deferredAttempt.getPromise()
         } else {

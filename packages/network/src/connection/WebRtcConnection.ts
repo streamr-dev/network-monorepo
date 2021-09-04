@@ -202,7 +202,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
         if (this.pingTimeoutRef) {
             clearTimeout(this.pingTimeoutRef)
         }
-        
+
         this.flushTimeoutRef = null
         this.connectionTimeoutRef = null
         this.pingTimeoutRef = null
@@ -231,6 +231,7 @@ export abstract class WebRtcConnection extends ConnectionEmitter {
             def.reject(reason)
         }
         this.emit('close')
+        this.removeAllListeners()
     }
 
     getConnectionId(): string {

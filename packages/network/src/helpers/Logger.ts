@@ -15,13 +15,19 @@ const parseBoolean = (value: string|undefined) => {
     }
 }
 
+export type AnyInstance = {
+    constructor: {
+        name: string
+    }
+}
+
 export class Logger {
 
     static NAME_LENGTH = 20
 
     private readonly logger: pino.Logger
 
-    constructor(module: NodeJS.Module, context?: string, destinationStream?: { write(msg: string): void }) {
+    constructor(module: NodeJS.Module | AnyInstance, context?: string, destinationStream?: { write(msg: string): void }) {
         const options: pino.LoggerOptions = {
             name: Logger.createName(module, context),
             enabled: !process.env.NOLOG,
@@ -36,17 +42,22 @@ export class Logger {
         this.logger = (destinationStream !== undefined) ? pino(options, destinationStream) : pino(options) 
     }
 
-    private static createName(module: NodeJS.Module, context?: string) {
-    
-        const parsedPath = path.parse(module.id)
-        let fileId = parsedPath.name
-        if (fileId === 'index') {
-            // file with name "foobar/index.ts" -> "foobar"
-            const parts = parsedPath.dir.split(path.sep)
-            fileId = parts[parts.length - 1]
+    private static createName(module: NodeJS.Module | AnyInstance, context?: string) {
+        let id: string
+        if ('exports' in module && 'require' in module) {
+            const parsedPath = path.parse(module.id)
+            let fileId = parsedPath.name
+            if (fileId === 'index') {
+                // file with name "foobar/index.ts" -> "foobar"
+                const parts = parsedPath.dir.split(path.sep)
+                fileId = parts[parts.length - 1]
+            }
+            id = fileId
+        } else {
+            id = module.constructor.name
         }
         const appId = process.env.STREAMR_APPLICATION_ID
-        const longName = _.without([appId, fileId, context], undefined).join(':')
+        const longName = _.without([appId, id, context], undefined).join(':')
         return _.padEnd(longName.substring(0, Logger.NAME_LENGTH), Logger.NAME_LENGTH, ' ')
     }
 

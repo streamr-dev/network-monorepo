@@ -56,7 +56,7 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
         super()
 
         this.peerInfo = peerInfo
-        this.logger = new Logger(module)
+        this.logger = new Logger(this)
         this.pingPongWs = new PingPongWs(() => this.getConnections(), pingInterval)
         this.handshakeTimeoutRefs = {}
         this.handshakeTimer = 15 * 1000
@@ -179,6 +179,9 @@ export abstract class AbstractWsEndpoint<C extends AbstractWsConnection> extends
                 this.emitHighBackPressure(peerInfo)
             }
         )
+        if (this.connectionById.get(connection.getPeerId())) {
+            this.logger.warn('new connection to %s? %s', connection.getPeerId(), !!this.connectionById.get(connection.getPeerId()))
+        }
         this.connectionById.set(connection.getPeerId(), connection)
         this.metrics.record('open', 1)
         this.logger.trace('added %s to connection list', connection.getPeerId())

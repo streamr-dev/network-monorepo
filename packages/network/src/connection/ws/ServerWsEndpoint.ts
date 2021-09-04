@@ -56,20 +56,24 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
 
             let otherNodeIdForLogging = 'unknown (no handshake)'
 
-            duplexStream.on('data', async (data: WebSocket.Data) => {
+            const onData = async (data: WebSocket.Data) => {
                 try {
                     const { uuid, peerId } = JSON.parse(data.toString())
                     if (uuid === handshakeUUID && peerId) {
                         otherNodeIdForLogging = peerId
+                        // remove handler
+                        duplexStream.off('data', onData)
                         this.clearHandshake(uuid)
                         this.acceptConnection(ws, duplexStream, peerId, this.resolveIP(request))
                     } else {
-                        this.logger.trace('Expected a handshake message got: ' + data.toString())
+                        this.logger.trace('Expected a handshake message from %s got: %o ', this.peerInfo.peerId, data.toString())
                     }
                 } catch (err) {
                     this.logger.trace(err)
                 }
-            })
+            }
+
+            duplexStream.on('data', onData)
 
             ws.on('error', (err) => {
                 this.logger.warn('socket for "%s" emitted error: %s', otherNodeIdForLogging, err)

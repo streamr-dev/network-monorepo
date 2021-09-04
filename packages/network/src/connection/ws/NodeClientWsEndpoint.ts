@@ -23,18 +23,27 @@ export default class NodeClientWsEndpoint extends AbstractClientWsEndpoint<NodeC
                     this.handshakeInit(ws, serverPeerInfo, reject)
                 })
 
-                ws.on('message', (message: string | Buffer | Buffer[]) => {
-                    this.handshakeListener(ws, serverPeerInfo, serverUrl, message, resolve)
-                })
+                const onMessage = (message: string | Buffer | Buffer[]) => {
+                    const didHandshake = this.handshakeListener(ws, serverPeerInfo, serverUrl, message, resolve)
+                    if (didHandshake) {
+                        ws.off('message', onMessage)
+                        ws.off('error', onError)
+                        ws.off('close', onClose)
+                    }
+                }
+                ws.on('message', onMessage)
 
-                ws.on('close', (code: number, reason: string): void => {
+                const onClose = (code: number, reason: string): void => {
                     this.onHandshakeClosed(serverUrl, code, reason, reject)
-                })
+                }
 
-                ws.on('error', (err) => {
+                ws.on('close', onClose)
+
+                const onError = (err: Error) => {
                     this.onHandshakeError(serverUrl, err, reject)
-                })
+                }
 
+                ws.on('error', onError)
             } catch (err) {
                 this.metrics.record('open:failedException', 1)
                 this.logger.trace('failed to connect to %s, error: %o', serverUrl, err)

@@ -112,18 +112,21 @@ export abstract class AbstractClientWsEndpoint<C extends AbstractWsConnection> e
         serverUrl: string,
         message: IMessageEvent | string | Buffer | Buffer[],
         resolve: (value: string | PromiseLike<string>) => void
-    ): void {
+    ): boolean {
         try {
             const { uuid, peerId } = this.doHandshakeParse(message)
             if (uuid && peerId === serverPeerInfo.peerId) {
                 this.clearHandshake(peerId)
                 this.doHandshakeResponse(uuid, peerId, ws)
                 resolve(this.setUpConnection(ws, serverPeerInfo, serverUrl))
+                return true
             } else {
-                this.logger.trace('Expected a handshake message got: ' + message)
+                this.logger.trace('Expected a handshake message from %s got: %o ', serverUrl, message)
+                return false
             }
         } catch (err) {
             this.logger.trace(err)
+            return false
         }
     }
 

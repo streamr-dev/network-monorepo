@@ -1,10 +1,10 @@
 import { EventEmitter } from 'events'
-import { MessageLayer, TrackerLayer, Utils } from 'streamr-client-protocol'
+import { StreamMessage, InstructionMessage, TrackerRegistry, createTrackerRegistry } from 'streamr-client-protocol'
 import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTracker'
 import { MessageBuffer } from '../helpers/MessageBuffer'
 import { SeenButNotPropagatedSet } from '../helpers/SeenButNotPropagatedSet'
-import { Status, StreamIdAndPartition, TrackerInfo } from '../identifiers'
+import { Status, StreamIdAndPartition, TrackerRecord } from '../identifiers'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { promiseTimeout } from '../helpers/PromiseTools'
 import { StreamManager } from './StreamManager'
@@ -37,7 +37,7 @@ export interface NodeOptions {
         nodeToTracker: NodeToTracker
     }
     peerInfo: PeerInfo
-    trackers: Array<TrackerInfo>
+    trackers: TrackerRecord[]
     metricsContext?: MetricsContext
     bufferTimeoutInMs?: number
     bufferMaxSize?: number
@@ -53,10 +53,10 @@ const MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION = 1
 export interface Node {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
     on(event: Event.NODE_DISCONNECTED, listener: (nodeId: NodeId) => void): this
-    on(event: Event.MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage, nodeId: NodeId) => void): this
-    on(event: Event.UNSEEN_MESSAGE_RECEIVED, listener: (msg: MessageLayer.StreamMessage, nodeId: NodeId) => void): this
-    on(event: Event.MESSAGE_PROPAGATED, listener: (msg: MessageLayer.StreamMessage) => void): this
-    on(event: Event.MESSAGE_PROPAGATION_FAILED, listener: (msg: MessageLayer.StreamMessage, nodeId: NodeId, error: Error) => void): this
+    on(event: Event.MESSAGE_RECEIVED, listener: (msg: StreamMessage, nodeId: NodeId) => void): this
+    on(event: Event.UNSEEN_MESSAGE_RECEIVED, listener: (msg: StreamMessage, nodeId: NodeId) => void): this
+    on(event: Event.MESSAGE_PROPAGATED, listener: (msg: StreamMessage) => void): this
+    on(event: Event.MESSAGE_PROPAGATION_FAILED, listener: (msg: StreamMessage, nodeId: NodeId, error: Error) => void): this
     on(event: Event.NODE_SUBSCRIBED, listener: (nodeId: NodeId, streamId: StreamIdAndPartition) => void): this
     on(event: Event.NODE_UNSUBSCRIBED, listener: (nodeId: NodeId, streamId: StreamIdAndPartition) => void): this
 }
@@ -76,9 +76,9 @@ export class Node extends EventEmitter {
     private readonly logger: Logger
     private readonly disconnectionTimers: Record<NodeId,NodeJS.Timeout>
     protected readonly streams: StreamManager
-    private readonly messageBuffer: MessageBuffer<[MessageLayer.StreamMessage, string | null]>
+    private readonly messageBuffer: MessageBuffer<[StreamMessage, string | null]>
     private readonly seenButNotPropagatedSet: SeenButNotPropagatedSet
-    private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
+    private readonly trackerRegistry: TrackerRegistry
     private readonly trackerBook: { [key: string]: TrackerId } // address => id
     private readonly trackerConnector: TrackerConnector
     private readonly instructionThrottler: InstructionThrottler
@@ -122,7 +122,7 @@ export class Node extends EventEmitter {
         })
         this.seenButNotPropagatedSet = new SeenButNotPropagatedSet()
 
-        this.trackerRegistry = Utils.createTrackerRegistry<TrackerInfo>(opts.trackers)
+        this.trackerRegistry = createTrackerRegistry(opts.trackers)
         this.trackerBook = {}
         this.rttUpdateTimeoutsOnTrackers = {}
         this.instructionThrottler = new InstructionThrottler(this.handleTrackerInstruction.bind(this))
@@ -210,11 +210,11 @@ export class Node extends EventEmitter {
         }
     }
 
-    onTrackerInstructionReceived(trackerId: TrackerId, instructionMessage: TrackerLayer.InstructionMessage): void {
+    onTrackerInstructionReceived(trackerId: TrackerId, instructionMessage: InstructionMessage): void {
         this.instructionThrottler.add(instructionMessage, trackerId)
     }
 
-    async handleTrackerInstruction(instructionMessage: TrackerLayer.InstructionMessage, trackerId: TrackerId, reattempt = false): Promise<void> {
+    async handleTrackerInstruction(instructionMessage: InstructionMessage, trackerId: TrackerId, reattempt = false): Promise<void> {
         const streamId = StreamIdAndPartition.fromMessage(instructionMessage)
         const { nodeIds, counter } = instructionMessage
 
@@ -282,7 +282,7 @@ export class Node extends EventEmitter {
         }
     }
 
-    onDataReceived(streamMessage: MessageLayer.StreamMessage, source: NodeId | null = null): void | never {
+    onDataReceived(streamMessage: StreamMessage, source: NodeId | null = null): void | never {
         this.metrics.record('onDataReceived', 1)
         const streamIdAndPartition = new StreamIdAndPartition(
             streamMessage.getStreamId(),
@@ -327,7 +327,7 @@ export class Node extends EventEmitter {
         }
     }
 
-    private propagateMessage(streamMessage: MessageLayer.StreamMessage, source: NodeId | null): void {
+    private propagateMessage(streamMessage: StreamMessage, source: NodeId | null): void {
         this.metrics.record('propagateMessage', 1)
         const streamIdAndPartition = new StreamIdAndPartition(
             streamMessage.getStreamId(),

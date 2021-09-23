@@ -1,4 +1,12 @@
 import { createNetworkNode, Protocol, MetricsContext } from 'streamr-network'
+import {
+    getTrackerRegistryFromContract,
+    getStorageNodeRegistryFromContract,
+    CachingStreamMessageValidator,
+    SmartContractConfig,
+    StorageNodeRecord,
+    TrackerRecord,
+} from 'streamr-network/dist/streamr-client-protocol'
 import StreamrClient from 'streamr-client'
 import { Wallet } from 'ethers'
 import { Logger } from 'streamr-network'
@@ -9,7 +17,7 @@ import { SubscriptionManager } from './SubscriptionManager'
 import { createPlugin } from './pluginRegistry'
 import { validateConfig } from './helpers/validateConfig'
 import { version as CURRENT_VERSION } from '../package.json'
-import { Config, NetworkSmartContract, StorageNodeRegistryItem, TrackerRegistryItem } from './config'
+import { Config } from './config'
 import { Plugin, PluginOptions } from './Plugin'
 import { startServer as startHttpServer, stopServer } from './httpServer'
 import BROKER_CONFIG_SCHEMA from './helpers/config.schema.json'
@@ -17,7 +25,6 @@ import { createLocalStreamrClient } from './localStreamrClient'
 import { createApiAuthenticator } from './apiAuthenticator'
 import { StorageNodeRegistry } from "./StorageNodeRegistry"
 import { v4 as uuidv4 } from 'uuid'
-const { Utils } = Protocol
 
 const logger = new Logger(module)
 
@@ -28,27 +35,21 @@ export interface Broker {
     stop: () => Promise<unknown>
 }
 
-const getTrackers = async (config: Config): Promise<TrackerRegistryItem[]> => {
-    if ((config.network.trackers as NetworkSmartContract).contractAddress) {
-        const registry = await Protocol.Utils.getTrackerRegistryFromContract({
-            contractAddress: (config.network.trackers as NetworkSmartContract).contractAddress,
-            jsonRpcProvider: (config.network.trackers as NetworkSmartContract).jsonRpcProvider
-        })
+const getTrackers = async (config: Config): Promise<TrackerRecord[]> => {
+    if ((config.network.trackers as SmartContractConfig).contractAddress) {
+        const registry = await getTrackerRegistryFromContract(config.network.trackers as SmartContractConfig)
         return registry.getAllTrackers()
     } else {
-        return config.network.trackers as TrackerRegistryItem[]
+        return config.network.trackers as TrackerRecord[]
     }
 }
 
-const getStorageNodes = async (config: Config): Promise<StorageNodeRegistryItem[]> => {
-    if ((config.storageNodeConfig.registry as NetworkSmartContract).contractAddress) {
-        const registry = await Protocol.Utils.getStorageNodeRegistryFromContract({
-            contractAddress: (config.storageNodeConfig.registry as NetworkSmartContract).contractAddress,
-            jsonRpcProvider: (config.storageNodeConfig.registry as NetworkSmartContract).jsonRpcProvider
-        })
+const getStorageNodes = async (config: Config): Promise<StorageNodeRecord[]> => {
+    if ((config.storageNodeConfig.registry as SmartContractConfig).contractAddress) {
+        const registry = await getStorageNodeRegistryFromContract(config.storageNodeConfig.registry as SmartContractConfig)
         return registry.getAllStorageNodes()
     } else {
-        return config.storageNodeConfig.registry as StorageNodeRegistryItem[]
+        return config.storageNodeConfig.registry as StorageNodeRecord[]
     }
 }
 
@@ -73,7 +74,7 @@ const createStreamMessageValidator = (config: Config): Protocol.StreamMessageVal
     const unauthenticatedClient = new StreamrClient({
         restUrl: config.streamrUrl + '/api/v1',
     })
-    return new Utils.CachingStreamMessageValidator({
+    return new CachingStreamMessageValidator({
         getStream: (sId) => unauthenticatedClient.getStreamValidationInfo(sId),
         isPublisher: (address, sId) => unauthenticatedClient.isStreamPublisher(sId, address),
         isSubscriber: (address, sId) => unauthenticatedClient.isStreamSubscriber(sId, address),
@@ -165,7 +166,7 @@ export const createBroker = async (config: Config): Promise<Broker> => {
             await Promise.all(plugins.map((plugin) => plugin.stop()))
             if (localStreamrClient !== undefined) {
                 await localStreamrClient.ensureDisconnected()
-            }        
+            }
             await networkNode.stop()
         }
     }

@@ -1,20 +1,16 @@
-import { Contract, providers } from 'ethers'
-import { ConnectionInfo } from 'ethers/lib/utils'
-
 import * as storageNodeRegistryConfig from '../../contracts/NodeRegistry.json'
-
-const { JsonRpcProvider } = providers
+import { initContract, SmartContractConfig } from './SmartContractUtil'
 
 // storageNodeAddress => HTTP address
-export type StorageNodeInfo = {
+export type StorageNodeRecord = {
     address: string
     url: string
 }
 
 export class StorageNodeRegistry {
-    private readonly records: StorageNodeInfo[]
+    private readonly records: StorageNodeRecord[]
 
-    constructor(records: StorageNodeInfo[]) {
+    constructor(records: StorageNodeRecord[]) {
         this.records = records
     }
 
@@ -27,22 +23,14 @@ export class StorageNodeRegistry {
         }
     }
 
-    getAllStorageNodes(): StorageNodeInfo[] {
+    getAllStorageNodes(): StorageNodeRecord[] {
         return this.records
     }
 }
-
-async function fetchStorageNodes(contractAddress: string, jsonRpcProvider: string | ConnectionInfo): Promise<StorageNodeInfo[]> {
-    const provider = new JsonRpcProvider(jsonRpcProvider)
-    // check that provider is connected and has some valid blockNumber
-    await provider.getBlockNumber()
-
-    const contract = new Contract(contractAddress, storageNodeRegistryConfig.abi, provider)
-    // check that contract is connected
-    await contract.addressPromise
-
+async function fetchStorageNodes(config: SmartContractConfig): Promise<StorageNodeRecord[]> {
+    const contract = await initContract(config, storageNodeRegistryConfig.abi)
     if (typeof contract.getNodes !== 'function') {
-        throw Error(`getNodes function is not defined in smart contract (${contractAddress})`)
+        throw Error(`getNodes function is not defined in smart contract (${config.contractAddress})`)
     }
 
     const result = await contract.getNodes()
@@ -54,17 +42,11 @@ async function fetchStorageNodes(contractAddress: string, jsonRpcProvider: strin
     })
 }
 
-export function createStorageNodeRegistry(servers: StorageNodeInfo[]): StorageNodeRegistry {
+export function createStorageNodeRegistry(servers: StorageNodeRecord[]): StorageNodeRegistry {
     return new StorageNodeRegistry(servers)
 }
 
-export async function getStorageNodeRegistryFromContract({
-    contractAddress,
-    jsonRpcProvider
-}: {
-    contractAddress: string,
-    jsonRpcProvider: string | ConnectionInfo
-}): Promise<StorageNodeRegistry> {
-    const storageNodes = await fetchStorageNodes(contractAddress, jsonRpcProvider)
+export async function getStorageNodeRegistryFromContract(config: SmartContractConfig): Promise<StorageNodeRegistry> {
+    const storageNodes = await fetchStorageNodes(config)
     return createStorageNodeRegistry(storageNodes)
 }

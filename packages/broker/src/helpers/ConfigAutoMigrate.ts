@@ -1,4 +1,6 @@
-import { Config, TrackerRegistryItem } from '../config'
+import { TrackerRecord } from 'streamr-network/dist/streamr-client-protocol'
+
+import { Config } from '../config'
 import fs from 'fs'
 import path from 'path'
 import { validateConfig } from './validateConfig'
@@ -72,7 +74,7 @@ const TESTNET2_STREAM_IDS = [
     'streamr.eth/brubeck-testnet/rewards/25kpf4'
 ]
 
-const migrateTrackerRegistry = (trackerRegistry: TrackerRegistryItem[]): TrackerRegistryItem[] => {
+const migrateTrackerRegistry = (trackerRegistry: TrackerRecord[]): TrackerRecord[] => {
     if (trackerRegistry.length === 1) {
         return TESTNET2_TRACKER_REGISTRY
     } else {
@@ -105,7 +107,7 @@ export const testnet2AutoMigrate = (config: any, configFilePath: string): Config
             console.info('Backing up testnet1 config to ' + backupFilePath)
             fs.writeFileSync(backupFilePath, backup)
 
-            config['network']['trackers'] = migrateTrackerRegistry(config['network']['trackers'] as TrackerRegistryItem[])
+            config['network']['trackers'] = migrateTrackerRegistry(config['network']['trackers'] as TrackerRecord[])
             delete config['plugins']['testnetMiner']['rewardStreamId']
             config['plugins']['testnetMiner']['rewardStreamIds'] = TESTNET2_STREAM_IDS
             validateConfig(config.plugins.testnetMiner, schemaTestnet2)

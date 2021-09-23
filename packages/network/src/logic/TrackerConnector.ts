@@ -1,5 +1,5 @@
 import { Utils } from 'streamr-client-protocol'
-import { StreamIdAndPartition, TrackerInfo } from '../identifiers'
+import { StreamIdAndPartition } from '../identifiers'
 import { NodeToTracker } from '../protocol/NodeToTracker'
 import { Logger } from '../helpers/Logger'
 import { PeerInfo } from '../connection/PeerInfo'
@@ -9,13 +9,19 @@ export class TrackerConnector {
 
     private readonly getStreams: () => ReadonlyArray<StreamIdAndPartition>
     private readonly nodeToTracker: NodeToTracker
-    private readonly trackerRegistry: Utils.TrackerRegistry<TrackerInfo>
+    private readonly trackerRegistry: Utils.TrackerRegistry
     private readonly logger: Logger
     private maintenanceTimer?: NodeJS.Timeout | null
     private readonly maintenanceInterval: number
     private unconnectables: Set<TrackerId>
 
-    constructor(getStreams: () => ReadonlyArray<StreamIdAndPartition>, nodeToTracker: NodeToTracker, trackerRegistry: Utils.TrackerRegistry<TrackerInfo>, logger: Logger, maintenanceInterval: number) {
+    constructor(
+        getStreams: () => ReadonlyArray<StreamIdAndPartition>,
+        nodeToTracker: NodeToTracker,
+        trackerRegistry: Utils.TrackerRegistry,
+        logger: Logger,
+        maintenanceInterval: number
+    ) {
         this.getStreams = getStreams
         this.nodeToTracker = nodeToTracker
         this.trackerRegistry = trackerRegistry

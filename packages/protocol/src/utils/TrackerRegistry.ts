@@ -1,29 +1,23 @@
-import { Contract, providers } from 'ethers'
-import { ConnectionInfo } from 'ethers/lib/utils'
-
 import { keyToArrayIndex } from './HashUtil'
+import { initContract, SmartContractConfig } from './SmartContractUtil'
 
 import * as trackerRegistryConfig from '../../contracts/TrackerRegistry.json'
 
-const { JsonRpcProvider } = providers
-
-export type SmartContractRecord = {
+export type TrackerRecord = {
     id: string
     http: string
     ws: string
 }
 
-export type TrackerInfo = SmartContractRecord | string
+export class TrackerRegistry {
+    private readonly records: TrackerRecord[]
 
-export class TrackerRegistry<T extends TrackerInfo> {
-    private readonly records: T[]
-
-    constructor(records: T[]) {
+    constructor(records: TrackerRecord[]) {
         this.records = records
         this.records.sort()  // TODO does this actually sort anything?
     }
 
-    getTracker(streamId: string, partition = 0): T {
+    getTracker(streamId: string, partition = 0): TrackerRecord {
         if (typeof streamId !== 'string' || streamId.indexOf('::') >= 0) {
             throw new Error(`invalid id: ${streamId}`)
         }
@@ -37,40 +31,27 @@ export class TrackerRegistry<T extends TrackerInfo> {
         return this.records[index]
     }
 
-    getAllTrackers(): T[] {
+    getAllTrackers(): TrackerRecord[] {
         return this.records
     }
 }
 
-async function fetchTrackers(contractAddress: string, jsonRpcProvider: string | ConnectionInfo) {
-    const provider = new JsonRpcProvider(jsonRpcProvider)
-    // check that provider is connected and has some valid blockNumber
-    await provider.getBlockNumber()
-
-    const contract = new Contract(contractAddress, trackerRegistryConfig.abi, provider)
-    // check that contract is connected
-    await contract.addressPromise
-
+async function fetchTrackers(config: SmartContractConfig) {
+    const contract = await initContract(config, trackerRegistryConfig.abi)
     if (typeof contract.getNodes !== 'function') {
-        throw Error(`getNodes function is not defined in smart contract (${contractAddress})`)
+        throw Error(`getNodes function is not defined in smart contract (${config.contractAddress})`)
     }
 
     return await contract.getNodes()
 }
 
-export function createTrackerRegistry<T extends TrackerInfo>(servers: T[]): TrackerRegistry<T> {
+export function createTrackerRegistry(servers: TrackerRecord[]): TrackerRegistry {
     return new TrackerRegistry(servers)
 }
 
-export async function getTrackerRegistryFromContract({
-    contractAddress,
-    jsonRpcProvider
-}: {
-    contractAddress: string,
-    jsonRpcProvider: string | ConnectionInfo
-}): Promise<TrackerRegistry<SmartContractRecord>> {
-    const trackers = await fetchTrackers(contractAddress, jsonRpcProvider)
-    const records: SmartContractRecord[] = []
+export async function getTrackerRegistryFromContract(config: SmartContractConfig): Promise<TrackerRegistry> {
+    const trackers = await fetchTrackers(config)
+    const records: TrackerRecord[] = []
     for (let i = 0; i < trackers.length; ++i) {
         const { metadata, url, nodeAddress } = trackers[i]
         try {

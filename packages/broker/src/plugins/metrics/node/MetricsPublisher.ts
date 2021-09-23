@@ -1,6 +1,6 @@
 import { StreamOperation, StreamrClient } from 'streamr-client'
 import { Logger } from 'streamr-network'
-import { StorageNodeRegistryItem } from '../../../config'
+import { StorageNodeRecord } from 'streamr-network/dist/streamr-client-protocol'
 import { PERIOD_LENGTHS, Sample } from './Sample'
 
 export const STREAM_ID_SUFFIXES = {
@@ -12,8 +12,8 @@ export const STREAM_ID_SUFFIXES = {
 
 export interface ClientOptions {
     ethereumPrivateKey: string,
-    storageNode: string, 
-    storageNodes: StorageNodeRegistryItem[]
+    storageNode: string,
+    storageNodes: StorageNodeRecord[]
     clientWsUrl?: string,
     clientHttpUrl?: string
 }
@@ -34,14 +34,14 @@ export class MetricsPublisher {
 
     private createClient(options: {
         ethereumPrivateKey: string,
-        storageNode: string, 
-        storageNodes: StorageNodeRegistryItem[]
+        storageNode: string,
+        storageNodes: StorageNodeRecord[]
         clientWsUrl?: string,
         clientHttpUrl?: string
     }) {
-        const storageNodeRegistryItem = options.storageNodes.find((n) => n.address === options.storageNode)
-        if (storageNodeRegistryItem === undefined) {
-            throw new Error(`Value ${storageNodeRegistryItem} not present in config.storageNodeRegistry`)
+        const storageNodeRecord = options.storageNodes.find((n) => n.address === options.storageNode)
+        if (storageNodeRecord === undefined) {
+            throw new Error(`Value ${storageNodeRecord} not present in config.storageNodeRegistry`)
         }
         return new StreamrClient({
             auth: {
@@ -49,7 +49,7 @@ export class MetricsPublisher {
             },
             url: options.clientWsUrl,
             restUrl: options.clientHttpUrl,
-            storageNode: storageNodeRegistryItem
+            storageNode: storageNodeRecord
         })
     }
 
@@ -98,21 +98,21 @@ export class MetricsPublisher {
 
     /**
      * Fetch the sample from the previous Broker session.
-     * 
-     * E.g. if Broker was running at 01:23:00-03:45:59, it generated 
+     *
+     * E.g. if Broker was running at 01:23:00-03:45:59, it generated
      * - 'hour' reports of 01 and 02
      * - 'min' reports for 01:23-03:44
      * - many 'sec' reports
-     * 
-     * We'll fetch all 'hour' reports, and all 'min' reports which have not yet been 
+     *
+     * We'll fetch all 'hour' reports, and all 'min' reports which have not yet been
      * aggerated to 'hour' reports. All 'sec' reports are ignored.
-     * 
-     * With this data we are able to generate the correct 'day' report at midnight 
-     * as it will include the 'hour' data for both this run and the previous run. 
+     *
+     * With this data we are able to generate the correct 'day' report at midnight
+     * as it will include the 'hour' data for both this run and the previous run.
      * The aggregator will also generate the missing 'hour' report from the 'min' samples.
-     * 
-     * This same logic applies also if the previous Broker run was before the current date. 
-     * In that case the missing 'hour' and 'day' reports are  aggregated and published, 
+     *
+     * This same logic applies also if the previous Broker run was before the current date.
+     * In that case the missing 'hour' and 'day' reports are  aggregated and published,
      * but they don't affect to the current 'day' sample.
      */
     async fetchExistingSamples(): Promise<{ minutes: Sample[], hours: Sample[] }> {

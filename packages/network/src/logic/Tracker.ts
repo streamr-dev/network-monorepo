@@ -2,13 +2,13 @@ import { EventEmitter } from 'events'
 import { Logger } from '../helpers/Logger'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import { TrackerServer, Event as TrackerServerEvent } from '../protocol/TrackerServer'
+import { StatusMessage } from 'streamr-client-protocol'
 import { OverlayTopology } from './OverlayTopology'
 import { InstructionCounter } from './InstructionCounter'
 import { LocationManager } from './LocationManager'
 import { attachRtcSignalling } from './rtcSignallingHandlers'
 import { PeerInfo } from '../connection/PeerInfo'
-import { Location, Status, StatusStreams, StreamKey } from '../identifiers'
-import { TrackerLayer } from 'streamr-client-protocol'
+import { Location, Status, StatusStreams, StreamKey, TrackerRecord } from '../identifiers'
 import { NodeId } from './Node'
 import { InstructionSender } from './InstructionSender'
 
@@ -109,7 +109,7 @@ export class Tracker extends EventEmitter {
         this.removeNode(node)
     }
 
-    processNodeStatus(statusMessage: TrackerLayer.StatusMessage, source: NodeId): void {
+    processNodeStatus(statusMessage: StatusMessage, source: NodeId): void {
         this.metrics.record('processNodeStatus', 1)
         const status = statusMessage.status as Status
         const { streams, rtts, location, singleStream, extra } = status
@@ -253,5 +253,13 @@ export class Tracker extends EventEmitter {
 
     getOverlayPerStream(): Readonly<OverlayPerStream> {
         return this.overlayPerStream
+    }
+
+    getTrackerRecord(): TrackerRecord {
+        return {
+            id: this.peerInfo.peerId,
+            http: this.getUrl().replace(/^ws/, 'http'),
+            ws: this.getUrl()
+        }
     }
 }

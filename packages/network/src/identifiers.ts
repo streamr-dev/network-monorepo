@@ -1,6 +1,8 @@
-import { TrackerLayer, SmartContractRecord } from 'streamr-client-protocol'
+import { TrackerLayer } from 'streamr-client-protocol'
 import { NodeId } from './logic/Node'
 import { RtcSubTypes } from './logic/RtcMessage'
+
+export { TrackerRecord } from 'streamr-client-protocol'
 
 /**
  * Uniquely identifies a stream
@@ -109,5 +111,3 @@ export interface RtcErrorMessage {
     targetNode: NodeId
     errorCode: string
 }
-
-export type TrackerInfo = SmartContractRecord

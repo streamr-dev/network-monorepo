@@ -4,8 +4,9 @@ import StreamMessageValidator from "./StreamMessageValidator"
 import CachingStreamMessageValidator from "./CachingStreamMessageValidator"
 import SigningUtil from "./SigningUtil"
 export * from "./SPID"
-import { createTrackerRegistry, getTrackerRegistryFromContract, TrackerRegistry, SmartContractRecord } from "./TrackerRegistry"
-import { createStorageNodeRegistry, getStorageNodeRegistryFromContract, StorageNodeRegistry } from "./StorageNodeRegistry"
+export * from "./SmartContractUtil"
+import { createTrackerRegistry, getTrackerRegistryFromContract, TrackerRegistry, TrackerRecord } from "./TrackerRegistry"
+import { createStorageNodeRegistry, getStorageNodeRegistryFromContract, StorageNodeRegistry, StorageNodeRecord } from "./StorageNodeRegistry"
 import { generateMnemonicFromAddress, parseAddressFromNodeId } from './NodeUtil'
 import { keyToArrayIndex } from "./HashUtil"
 
@@ -15,11 +16,12 @@ export {
     StreamMessageValidator,
     CachingStreamMessageValidator,
     SigningUtil,
-    SmartContractRecord,
+    TrackerRecord,
     TrackerRegistry,
     createTrackerRegistry,
     getTrackerRegistryFromContract,
     StorageNodeRegistry,
+    StorageNodeRecord,
     createStorageNodeRegistry,
     getStorageNodeRegistryFromContract,
     generateMnemonicFromAddress,

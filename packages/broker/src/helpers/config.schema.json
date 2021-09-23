@@ -1,304 +1,350 @@
 {
-  "$id": "config.schema.json",
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "description": "Broker configuration format",
-  "type": "object",
-  "required": [
-    "plugins",
-    "ethereumPrivateKey",
-    "network"
-  ],
-  "additionalProperties": false,
-  "properties": {
-    "plugins": {
-      "type": "object",
-      "description": "Pluging configurations",
-      "additionalProperties": true
+    "$id": "config.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Broker configuration format",
+    "type": "object",
+    "required": [
+        "plugins",
+        "ethereumPrivateKey",
+        "network"
+    ],
+    "additionalProperties": false,
+    "properties": {
+        "plugins": {
+            "type": "object",
+            "description": "Pluging configurations",
+            "additionalProperties": true
+        },
+        "httpServer": {
+            "type": [
+                "object"
+            ],
+            "description": "HTTP server configuration",
+            "default": {},
+            "additionalProperties": false,
+            "properties": {
+                "port": {
+                    "$ref": "#/definitions/port",
+                    "description": "Port to start HTTP server on",
+                    "default": 7171
+                },
+                "certFileName": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Path of certificate file to use for SSL",
+                    "default": null
+                },
+                "privateKeyFileName": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Path of private key file to use for SSL",
+                    "default": null
+                }
+            }
+        },
+        "ethereumPrivateKey": {
+            "type": "string",
+            "description": "Ethereum private key to establish broker identity",
+            "pattern": "^(0x)?[a-f0-9]{64}$"
+        },
+        "generateSessionId": {
+            "type": "boolean",
+            "description": "Whether to generate a session id that gets attached to node id (or not). Disable for consistent node id.",
+            "default": true
+        },
+        "network": {
+            "type": "object",
+            "description": "Network node settings",
+            "required": [
+                "name",
+                "location"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Human-readable name for network node"
+                },
+                "trackers": {
+                    "default": [
+                        {
+                            "id": "0x7b9ad7B9E377dFd17fb4fF8F946956BDa1572849",
+                            "ws": "wss://corea1.streamr.network:30300",
+                            "http": "https://corea1.streamr.network:30300"
+                        },
+                        {
+                            "id": "0xeC3471C25f47FD62D181Af7fd5cB82D4520E26BC",
+                            "ws": "wss://corea2.streamr.network:30300",
+                            "http": "https://corea2.streamr.network:30300"
+                        }
+                    ],
+                    "oneOf": [
+                        {
+                            "type": "array",
+                            "description": "List of tracker ids and HTTP/WebSocket URLs to connect to",
+                            "items": {
+                                "type": "object",
+                                "required": [
+                                    "id",
+                                    "ws",
+                                    "http"
+                                ],
+                                "properties": {
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "ws": {
+                                        "type": "string"
+                                    },
+                                    "http": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "description": "Tracker registry smart contract to use for fetching tracker WebSocket URLs",
+                            "$ref": "#/definitions/smartContractConfig"
+                        }
+                    ]
+                },
+                "location": {
+                    "description": "Location of node",
+                    "default": null,
+                    "oneOf": [
+                        {
+                            "type": "null",
+                            "description": "Location undefined"
+                        },
+                        {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "latitude",
+                                "longitude",
+                                "country",
+                                "city"
+                            ],
+                            "properties": {
+                                "latitude": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ]
+                                },
+                                "longitude": {
+                                    "type": [
+                                        "number",
+                                        "null"
+                                    ]
+                                },
+                                "country": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "city": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                },
+                "stun": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Address of a STUN server for NAT traversal with ICE, port included"
+                },
+                "turn": {
+                    "description": "Address of a TURN server if direct connections cannot be established between hosts behind NATs, port included",
+                    "oneOf": [
+                        {
+                            "type": "null",
+                            "description": "TURN-server undefined"
+                        }, {
+                        "type": "object",
+                        "required": [
+                            "url",
+                            "username",
+                            "password"
+                        ],
+                        "properties": {
+                            "url": {
+                                "type": "string"
+                            },
+                            "username": {
+                                "type": "string"
+                            },
+                            "password": {
+                                "type": "string"
+                            }
+                        }
+                        }
+                    ]
+                }
+            }
+        },
+        "streamrUrl": {
+            "type": "string",
+            "description": "Base URL of Core (E&E) API to use",
+            "default": "https://streamr.network",
+            "format": "uri"
+        },
+        "streamrAddress": {
+            "type": "string",
+            "description": "Ethereum address Core (E&E)",
+            "default": "0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a",
+            "pattern": "^0x[a-fA-F0-9]{40}$"
+        },
+        "storageNodeConfig": {
+            "type": "object",
+            "description": "Storage node settings",
+            "default": {
+                "registry": [{
+                    "address": "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
+                    "url": "https://corea1.streamr.network:8001"
+                }]
+            },
+            "required": [
+                "registry"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "registry": {
+                    "oneOf": [
+                        {
+                            "type": "array",
+                            "description": "List of storageNode HTTP URLs to connect to",
+                            "items": {
+                                "$ref": "#/definitions/storageNodeRecord"
+                            }
+                        },
+                        {
+                            "description": "Storage Node Registry Config",
+                            "$ref": "#/definitions/smartContractConfig"
+                        }
+                    ]
+                }
+            }
+        },
+        "apiAuthentication": {
+            "type": [
+                "object",
+                "null"
+            ],
+            "description": "Plugins should restrict the API access: if an endpoint requires authentication, the user must provide one of the API keys e.g. in a request header",
+            "default": null,
+            "required": [
+                "keys"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "keys": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
     },
-    "httpServer": {
-      "type": [
-        "object"
-      ],
-      "description": "HTTP server configuration",
-      "default": {},
-      "additionalProperties": false,
-      "properties": {
+    "definitions": {
         "port": {
-          "$ref": "#/definitions/port",
-          "description": "Port to start HTTP server on",
-          "default": 7171
+            "type": "number",
+            "minimum": 0,
+            "maximum": 65353
         },
-        "certFileName": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Path of certificate file to use for SSL",
-          "default": null
-        },
-        "privateKeyFileName": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Path of private key file to use for SSL",
-          "default": null
-        }
-      }
-    },
-    "ethereumPrivateKey": {
-      "type": "string",
-      "description": "Ethereum private key to establish broker identity",
-      "pattern": "^(0x)?[a-f0-9]{64}$"
-    },
-    "generateSessionId": {
-      "type": "boolean",
-      "description": "Whether to generate a session id that gets attached to node id (or not). Disable for consistent node id.",
-      "default": true
-    },
-    "network": {
-      "type": "object",
-      "description": "Network node settings",
-      "required": [
-        "name",
-        "location"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Human-readable name for network node"
-        },
-        "trackers": {
-          "default": [
-            {
-              "id": "0x7b9ad7B9E377dFd17fb4fF8F946956BDa1572849",
-              "ws": "wss://corea1.streamr.network:30300",
-              "http": "https://corea1.streamr.network:30300"
-            },
-            {
-              "id": "0xeC3471C25f47FD62D181Af7fd5cB82D4520E26BC",
-              "ws": "wss://corea2.streamr.network:30300",
-              "http": "https://corea2.streamr.network:30300"
-            }
-          ],
-          "oneOf": [
-            {
-              "type": "array",
-              "description": "List of tracker ids and HTTP/WebSocket URLs to connect to",
-              "items": {
-                "type": "object",
-                "required": [
-                  "id",
-                  "ws",
-                  "http"
-                ],
-                "properties": {
-                  "id": {
+        "storageNodeRecord": {
+            "type": "object",
+            "required": [
+                "address",
+                "url"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "address": {
                     "type": "string"
-                  },
-                  "ws": {
-                    "type": "string"
-                  },
-                  "http": {
-                    "type": "string"
-                  }
-                }
-              }
-            },
-            {
-              "description": "Tracker registry smart contract to use for fetching tracker WebSocket URLs",
-              "$ref": "#/definitions/smartContractConfig"
-            }
-          ]
-        },
-        "location": {
-          "description": "Location of node",
-          "default": null,
-          "oneOf": [
-            {
-              "type": "null",
-              "description": "Location undefined"
-            },
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "latitude",
-                "longitude",
-                "country",
-                "city"
-              ],
-              "properties": {
-                "latitude": {
-                  "type": [
-                    "number",
-                    "null"
-                  ]
                 },
-                "longitude": {
-                  "type": [
-                    "number",
-                    "null"
-                  ]
-                },
-                "country": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "city": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                }
-              }
-            }
-          ]
-        },
-        "stun": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "description": "Address of a STUN server for NAT traversal with ICE, port included"
-        },
-        "turn": {
-          "description": "Address of a TURN server if direct connections cannot be established between hosts behind NATs, port included",
-          "oneOf": [
-            {
-              "type": "null",
-              "description": "TURN-server undefined"
-            }, {
-              "type": "object",
-              "required": [
-                "url",
-                "username",
-                "password"
-              ],
-              "properties": {
                 "url": {
-                  "type": "string"
-                },
-                "username": {
-                  "type": "string"
-                },
-                "password": {
-                  "type": "string"
+                    "type": "string"
                 }
-              }
             }
-          ]
-        }
-      }
-    },
-    "streamrUrl": {
-      "type": "string",
-      "description": "Base URL of Core (E&E) API to use",
-      "default": "https://streamr.network",
-      "format": "uri"
-    },
-    "streamrAddress": {
-      "type": "string",
-      "description": "Ethereum address Core (E&E)",
-      "default": "0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a",
-      "pattern": "^0x[a-fA-F0-9]{40}$"
-    },
-    "storageNodeConfig": {
-      "type": "object",
-      "description": "Storage node settings",
-      "default": {
-        "registry": [{
-          "address": "0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916",
-          "url": "https://corea1.streamr.network:8001"
-        }]
-      },
-      "required": [
-        "registry"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "registry": {
-          "oneOf": [
-            {
-              "type": "array",
-              "description": "List of storageNode HTTP URLs to connect to",
-              "items": {
-                "$ref": "#/definitions/storageNodeRegistryItem"
-              }
-            },
-            {
-              "description": "Storage Node Registry Config",
-              "$ref": "#/definitions/smartContractConfig"
+        },
+        "smartContractConfig": {
+            "type": "object",
+            "required": [
+                "contractAddress",
+                "jsonRpcProvider"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "contractAddress": {
+                    "type": "string",
+                    "description": "Ethereum address of registry smart contract",
+                    "pattern": "^0x[a-fA-F0-9]{40}$"
+                },
+                "jsonRpcProvider": {
+                    "oneOf": [
+                        {
+                            "type": "string",
+                            "description": "URL for JSON RPC Provider",
+                            "format": "uri"
+                        },
+                        {
+                            "type": "object",
+                            "description": "Ethers ConnectionInfo",
+                            "properties": {
+                                "allowGzip": {
+                                    "type": "boolean"
+                                },
+                                "allowInsecureAuthentication": {
+                                    "type": "boolean"
+                                },
+                                "headers": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": [
+                                            "string",
+                                            "number"
+                                        ]
+                                    }
+                                },
+                                "password": {
+                                    "type": "string"
+                                },
+                                "throttleCallback": {
+                                    "type": "object"
+                                },
+                                "throttleLimit": {
+                                    "type": "number"
+                                },
+                                "throttleSlotInterval": {
+                                    "type": "number"
+                                },
+                                "timeout": {
+                                    "type": "number"
+                                },
+                                "url": {
+                                    "type": "string"
+                                },
+                                "user": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    ]
+                }
             }
-          ]
         }
-      }
-    },
-    "apiAuthentication": {
-      "type": [
-        "object",
-        "null"
-      ],
-      "description": "Plugins should restrict the API access: if an endpoint requires authentication, the user must provide one of the API keys e.g. in a request header",
-      "default": null,
-      "required": [
-        "keys"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "keys": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
     }
-  },
-  "definitions": {
-    "port": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 65353
-    },
-    "storageNodeRegistryItem": {
-      "type": "object",
-      "required": [
-        "address",
-        "url"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "address": {
-          "type": "string"
-        },
-        "url": {
-          "type": "string"
-        }  
-      }
-    },
-    "smartContractConfig": {
-      "type": "object",
-      "required": [
-        "contractAddress",
-        "jsonRpcProvider"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "contractAddress": {
-          "type": "string",
-          "description": "Ethereum address of registry smart contract",
-          "pattern": "^0x[a-fA-F0-9]{40}$"
-        },
-        "jsonRpcProvider": {
-          "type": "string",
-          "description": "URL for JSON RPC Provider",
-          "format": "uri"
-        }
-      }
-    }
-  }
 }

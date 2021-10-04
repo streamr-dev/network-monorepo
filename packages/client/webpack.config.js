@@ -154,5 +154,60 @@ module.exports = (env, argv) => {
         })
     }
 
-    return [clientConfig, clientMinifiedConfig].filter(Boolean)
+    const reactNativeConfig = merge({}, commonConfig, {
+        name: 'react-native-lib',
+        target: 'web',
+        output: {
+            library: {
+                type: 'umd2',
+                name: 'StreamrClient'
+            },
+            filename: libraryName + '.rn.js',
+        },
+        externals: [
+            {
+                'react-native': true,
+                '@react-native-async-storage/async-storage/src/AsyncStorage.native': '@react-native-async-storage/async-storage/src/AsyncStorage.native',
+            }
+        ],
+        resolve: {
+            modules: [
+                'node_modules', // without this symlinked protocol won't find own dependencies
+            ],
+            alias: {
+                stream: 'readable-stream',
+                util: 'util',
+                http: path.resolve(__dirname, './src/shim/http-https.js'),
+                https: path.resolve(__dirname, './src/shim/http-https.js'),
+                ws: path.resolve(__dirname, './src/shim/ws.js'),
+                crypto: path.resolve(__dirname, 'node_modules', 'crypto-browserify'),
+                buffer: path.resolve(__dirname, 'node_modules', 'buffer'),
+                'node-fetch': path.resolve(__dirname, './src/shim/node-fetch.js'),
+                'node-webcrypto-ossl': path.resolve(__dirname, 'src/shim/crypto.js'),
+                'streamr-client-protocol': path.resolve(__dirname, 'node_modules/streamr-client-protocol/dist/src'),
+                // swap out ServerPersistentStore for ReactNativePersistentStore
+                [path.resolve(__dirname, 'src/stream/encryption/ServerPersistentStore')]: (
+                    path.resolve(__dirname, 'src/stream/encryption/ReactNativePersistentStore')
+                ),
+            },
+            conditionNames: ['react-native'],
+            mainFields: ['react-native', 'browser', 'main']
+        },
+        plugins: [
+            new LodashWebpackPlugin(),
+            new webpack.ProvidePlugin({
+                process: 'process/browser',
+                Buffer: ['buffer', 'Buffer'],
+            }),
+            ...(analyze ? [
+                new BundleAnalyzerPlugin({
+                    analyzerMode: 'static',
+                    openAnalyzer: false,
+                    generateStatsFile: true,
+                }),
+            ] : [])
+        ]
+    })
+
+    return [clientConfig, clientMinifiedConfig, reactNativeConfig].filter(Boolean)
 }

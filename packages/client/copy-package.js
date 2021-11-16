@@ -9,9 +9,9 @@ delete pkg.private
 pkg.types = `./${path.relative('./dist', pkg.types)}`
 pkg.main = `./${path.relative('./dist', pkg.main)}`
 pkg.browser = `./${path.relative('./dist', pkg.browser)}`
-pkg.exports.browser = `./${path.relative('./dist', pkg.exports.browser)}`
-pkg.exports.default.import = `./${path.relative('./dist', pkg.exports.default.import)}`
-pkg.exports.default.require = `./${path.relative('./dist', pkg.exports.default.require)}`
+pkg.exports['.'].browser = `./${path.relative('./dist', pkg.exports['.'].browser)}`
+pkg.exports['.'].default.import = `./${path.relative('./dist', pkg.exports['.'].default.import)}`
+pkg.exports['.'].default.require = `./${path.relative('./dist', pkg.exports['.'].default.require)}`
 
 try {
     fs.mkdirSync('./dist/')

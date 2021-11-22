@@ -37,7 +37,11 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
           check-latest: true
-
+      - uses: actions/cache@v2
+        name: Cache node_modules/.cache
+        with:
+          path: node_modules/.cache
+          key: node_modules_cache-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -70,6 +74,11 @@ jobs:
           cache-dependency-path: package-lock.json
           check-latest: true
           registry-url: https://registry.npmjs.org/
+      - uses: actions/cache@v2
+        name: Cache node_modules/.cache
+        with:
+          path: node_modules/.cache
+          key: node_modules_cache-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - name: bootstrap-pkg
         working-directory: './'
         run: |

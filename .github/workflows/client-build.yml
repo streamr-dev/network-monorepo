@@ -40,6 +40,11 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
           node-version-file: '.nvmrc'
+      - uses: actions/cache@v2
+        name: Cache node_modules/.cache
+        with:
+          path: node_modules/.cache
+          key: node_modules_cache-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -71,6 +76,11 @@ jobs:
         with:
           name: client-build
           path: packages/client/dist
+      - uses: actions/cache@v2
+        name: Cache node_modules/.cache
+        with:
+          path: node_modules/.cache
+          key: node_modules_cache-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -96,6 +106,11 @@ jobs:
         with:
           name: client-build
           path: packages/client/dist
+      - uses: actions/cache@v2
+        name: Cache node_modules/.cache
+        with:
+          path: node_modules/.cache
+          key: node_modules_cache-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -104,12 +119,12 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
+          services-to-start: "nginx graph-deploy-streamregistry-subgraph parity-node0 init-keyspace brokers trackers"
       - uses: nick-invision/retry@v2
-        name: Run Realtime Test
+        name: Run Test
         with:
           max_attempts: 3
-          timeout_minutes: 3
+          timeout_minutes: 5
           retry_on: error
           command: cd packages/client && npm run test-browser-realtime
       - name: Stop Streamr Docker Stack
@@ -133,6 +148,11 @@ jobs:
         with:
           name: client-build
           path: packages/client/dist
+      - uses: actions/cache@v2
+        name: Cache node_modules/.cache
+        with:
+          path: node_modules/.cache
+          key: node_modules_cache-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -141,12 +161,12 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
+          services-to-start: "nginx graph-deploy-streamregistry-subgraph parity-node0 init-keyspace brokers trackers"
       - uses: nick-invision/retry@v2
-        name: Run Resend Test
+        name: Run Test
         with:
           max_attempts: 3
-          timeout_minutes: 3
+          timeout_minutes: 5
           retry_on: error
           command: cd packages/client && npm run test-browser-resend
       - name: Stop Streamr Docker Stack
@@ -165,7 +185,7 @@ jobs:
         node-version: [16.x]
     steps:
       - uses: actions/checkout@v2.4.0
-      - uses: actions/setup-node@v2.4.1
+      - uses: actions/setup-node@v2.5.0
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
@@ -175,15 +195,20 @@ jobs:
         with:
           name: client-build
           path: packages/client/dist
-      - name: Start Streamr Docker Stack
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
+      - uses: actions/cache@v2
+        name: Cache node_modules/.cache
         with:
-          services-to-start: "nginx graph-deploy-streamregistry-subgraph parity-node0 init-keyspace brokers trackers"
+          path: node_modules/.cache
+          key: node_modules_cache-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - name: bootstrap-pkg
         working-directory: './'
         run: |
           npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-client
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
+        with:
+          services-to-start: "nginx graph-deploy-streamregistry-subgraph parity-node0 init-keyspace brokers trackers"
       - name: benchmark publish
         timeout-minutes: 15
         run: DEBUG='' npm run benchmark-publish > benchmark-publish.txt

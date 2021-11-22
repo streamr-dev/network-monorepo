@@ -6,5 +6,6 @@ module.exports = {
         }
     },
     clearMocks: true,
-    testEnvironment: 'node'
+    testEnvironment: 'node',
+    cacheDirectory: "node_modules/.cache/jest",
 }

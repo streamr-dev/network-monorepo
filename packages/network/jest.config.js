@@ -33,4 +33,5 @@ module.exports = {
     testPathIgnorePatterns: ["/browser/", "/node_modules/"],
 
     setupFilesAfterEnv: ["jest-extended"],
+    cacheDirectory: "node_modules/.cache/jest",
 }

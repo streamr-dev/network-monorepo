@@ -1,4 +1,5 @@
 module.exports = {
     preset: 'ts-jest',
-    testEnvironment: 'node'
+    testEnvironment: 'node',
+    cacheDirectory: "node_modules/.cache/jest"
 }

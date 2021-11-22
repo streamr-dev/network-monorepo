@@ -31,6 +31,11 @@ jobs:
           cache-dependency-path: package-lock.json
           cache: 'npm'
           node-version-file: '.nvmrc'
+      - uses: actions/cache@v2
+        name: Cache node_modules/.cache
+        with:
+          path: node_modules/.cache
+          key: node_modules_cache-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - name: bootstrap-pkg
         working-directory: './'
         run: |
@@ -38,8 +43,6 @@ jobs:
           npm run bootstrap-pkg streamr-network
       - run: npm run eslint
       - run: npm run test-unit
-        env:
-          CI: true
       - name: Run test-integration
         run: |
           ulimit -c unlimited
@@ -47,8 +50,6 @@ jobs:
           chmod a+rwx /tmp/cores
           echo "/tmp/cores/core.%p" | sudo tee /proc/sys/kernel/core_pattern
           npm run test-integration
-        env:
-          CI: true
       - if: failure()
         name: Print core dump
         run: |
@@ -81,12 +82,16 @@ jobs:
           cache: 'npm'
           node-version-file: '.nvmrc'
           registry-url: https://registry.npmjs.org/
+      - uses: actions/cache@v2
+        name: Cache node_modules/.cache
+        with:
+          path: node_modules/.cache
+          key: node_modules_cache-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - name: bootstrap-pkg
         working-directory: './'
         run: |
           npm install -g npm@8 --prefer-offline --no-audit
           npm run bootstrap-pkg streamr-network
-
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}
         # if tag includes beta keyword
         if: contains(steps.get_version.outputs.VERSION, 'beta') == true

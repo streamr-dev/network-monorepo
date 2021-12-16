@@ -50,7 +50,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
+          services-to-start: "core-api nginx graph-deploy-streamregistry-subgraph parity-node0 parity-sidechain-node0  init-keyspace brokers trackers"
       - name: Run Test
         run: npm run test-integration-dataunions
       - name: Collect docker logs on failure

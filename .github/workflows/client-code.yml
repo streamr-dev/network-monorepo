@@ -127,7 +127,15 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
+          services-to-start: "nginx graph-deploy-streamregistry-subgraph parity-node0 init-keyspace brokers trackers"
+      - name: Cache Jest Timing Snapshots
+        uses: actions/cache@v2.1.7
+        with:
+          path: '*.tsnapshot'
+          key: ${{ runner.os }}-jest-timing-${{ github.base_ref }}-${{ github.head_ref }}-${{ github.sha}}
+          restore-keys: |
+            ${{ runner.os }}-jest-timing-${{ github.base_ref }}
+            ${{ runner.os }}-jest-timing-${{ github.base_ref }}-${{ github.head_ref }}
       - name: Run Test
         run: npm run $TEST_NAME
       - name: Collect docker logs on failure
@@ -171,7 +179,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
+          services-to-start: "nginx graph-deploy-streamregistry-subgraph parity-node0 init-keyspace brokers trackers"
       - uses: nick-invision/retry@v2
         name: Run Test
         with:
@@ -210,7 +218,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge brokers trackers nginx smtp graph-deploy-streamregistry-subgraph"
+          services-to-start: "nginx graph-deploy-streamregistry-subgraph parity-node0 init-keyspace brokers trackers"
       - uses: nick-invision/retry@v2
         name: Run Test
         with:

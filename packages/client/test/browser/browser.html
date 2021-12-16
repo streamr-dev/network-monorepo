@@ -70,13 +70,11 @@
 
     const urlParams = new URLSearchParams(window.location.search)
     const streamName = urlParams.get('streamName')
-    const url = urlParams.get('WEBSOCKET_URL') || 'ws://localhost/api/v1/ws'
     const restUrl = urlParams.get('REST_URL') || 'http://localhost/api/v1'
 
     const publisherAuth = StreamrClient.generateEthereumAccount()
     const subscriberAuth = StreamrClient.generateEthereumAccount()
     console.info('Creating streamr client connecting to:', {
-        url,
         restUrl,
     })
 

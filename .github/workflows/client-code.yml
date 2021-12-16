@@ -70,7 +70,7 @@ jobs:
         run: npm run test-unit
 
   integration:
-    name: ${{ matrix.test-name }} ${{ matrix.websocket-url.name }} using Node ${{ matrix.node-version }}
+    name: ${{ matrix.test-name }} using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -80,14 +80,8 @@ jobs:
           "test-integration-no-resend",
           "test-integration-resend",
         ]
-        websocket-url:
-          - name: "default"
-            url: ""
-          - name: "single-node-only"
-            url: "ws://localhost:8690/api/v1/ws"
     env:
       TEST_NAME: ${{ matrix.test-name }}
-      WEBSOCKET_URL: ${{ matrix.websocket-url.url}}
       TEST_REPEATS: 2
 
     steps:
@@ -145,7 +139,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v2.3.1
         with:
-          name: docker-logs-${{ matrix.test-name }}-${{ matrix.websocket-url.name }}-node${{ matrix.node-version }}--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
+          name: docker-logs-${{ matrix.test-name }}-node${{ matrix.node-version }}--${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt}}
           path: 'logs'
       - name: Stop Streamr Docker Stack
         if: always()

@@ -1106,15 +1106,14 @@ describe('From Core-API', () => {  // TODO there is no need to have Core-API tes
         })
 
         it('deletes streams storage nodes', async () => {
-            const storageNodeAddress = StreamrClient.generateEthereumAccount().address
             const stream = await streamOwnerClient.createStream({
                 id: `/test-stream/${Date.now()}`,
                 name: 'stream-id-' + Date.now(),
             })
-            await stream.addToStorageNode(storageNodeAddress)
-            expect(await streamOwnerClient.isStreamStoredInStorageNode(stream.id, storageNodeAddress)).toBe(true)  // FAIL: maybe also test misconfigured, should we call setNode()?
+            await stream.addToStorageNode(storageNodeTestConfig.address)
+            expect(await streamOwnerClient.isStreamStoredInStorageNode(stream.id, storageNodeTestConfig.address)).toBe(true)
             await stream.delete()
-            expect(await streamOwnerClient.isStreamStoredInStorageNode(stream.id, storageNodeAddress)).toBe(false)
+            expect(await streamOwnerClient.isStreamStoredInStorageNode(stream.id, storageNodeTestConfig.address)).toBe(false)
         })
     })
 })

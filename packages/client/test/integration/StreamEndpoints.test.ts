@@ -1,6 +1,6 @@
 import { Wallet } from 'ethers'
 
-import { clientOptions, uid, createTestStream, until, fakeAddress, createRelativeTestStreamId, getPrivateKey } from '../utils'
+import { clientOptions, uid, createTestStream, until, fakeAddress, createRelativeTestStreamId, getPrivateKey, fakePrivateKey } from '../utils'
 import { NotFoundError } from '../../src/authFetch'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Stream, StreamPermission } from '../../src/Stream'
@@ -661,12 +661,460 @@ function TestStreamEndpoints(getName: () => string, delay: number) {
     })
 }
 
-describe('StreamEndpoints', () => {
+/*TODO revert describe('StreamEndpoints', () => {
     // describe('using normal name', () => {
     //     TestStreamEndpoints(() => uid('test-stream'), 0)
     // })
 
     describe('using name with slashes', () => {
         TestStreamEndpoints(() => uid('test-stream/slashes'), 4000)
+    })
+})*/
+
+describe('From Core-API', () => {  // TODO there is no need to have Core-API tests separately -> move to be inside TestStreamEndpoints (and remove possible duplicates)
+    const ZERO_ADDRESS= '0x0000000000000000000000000000000000000000'
+	const ENS_DOMAIN_OWNER =new Wallet('0xe5af7834455b7239881b85be89d905d6881dcb4751063897f12be1b0dd546bdb')  // owns testdomain1.eth ENS domain in dev mainchain
+
+    let streamId: string
+    let streamOwner: Wallet
+    let streamOwnerClient: StreamrClient
+    let anonymousUser: Wallet = new Wallet(fakePrivateKey())
+
+    const getEndsOwnerClient = () => {  // TODO inline
+        return new StreamrClient({
+            ...clientOptions,
+            auth: {
+                privateKey: ENS_DOMAIN_OWNER.privateKey
+            },
+        })
+    }
+
+    
+    const getAnonymousClient = () => {  // TODO inline
+        return new StreamrClient({
+            ...clientOptions
+        })
+    }
+
+    beforeAll(async () => {
+        streamOwner = new Wallet(await getPrivateKey())
+        streamOwnerClient = new StreamrClient({
+            ...clientOptions,
+            auth: {
+                privateKey: streamOwner.privateKey
+            },
+        })
+        const response = await streamOwnerClient.createStream({
+            id: '/default/stream/for/testing',
+            name: 'Stream name with date: ' + Date.now(),
+        })
+        streamId = response.id
+    })
+
+    describe('POST /api/v1/streams', function () {
+
+        it('happy path', async () => {
+            const assertValidResponse = (json: any, properties: any, expectedId: string) => {
+                expect(json.name).toBe(properties.name)
+                expect(json.description).toBe(properties.description)
+                expect(json.config).toEqual(properties.config)
+                expect(json.partitions).toBe(properties.partitions)
+                expect(json.autoConfigure).toBe(properties.autoConfigure)
+                expect(json.storageDays).toBe(properties.storageDays)
+                expect(json.inactivityThresholdHours).toBe(properties.inactivityThresholdHours)
+                expect(json.id).toBe(expectedId)
+            }
+            const properties = {
+                id: '/hello/world/stream',
+                name: 'Mock name',
+                description: 'Mock description',
+                config: {
+                    fields: [
+                        {
+                            name: 'mock-field',
+                            type: <const>'string',
+                        },
+                    ],
+                },
+                partitions: 12,
+                autoConfigure: false,
+                storageDays: 66,
+                inactivityThresholdHours: 4,
+                uiChannel: false,
+            }
+            const createResponse = await streamOwnerClient.createStream(properties)
+            assertValidResponse(createResponse, properties, streamOwner.address.toLowerCase() + "/hello/world/stream")
+            const streamId = createResponse.id
+            const fetchResponse = await streamOwnerClient.getStream(streamId)
+            assertValidResponse(fetchResponse, properties, streamId)
+        })
+
+        it('missing id', () => {
+            expect(async () => {
+                await streamOwnerClient.createStream({
+                    id: undefined,
+                } as any)
+            }).toThrow('Some validation message')  // FAIL: creates a stream, e.g. '0x5a35065336f969cd507bd64f58e27a6e5b6f2df5/'
+        })
+
+        it('invalid properties', () => {
+            expect(async () => {
+                await streamOwnerClient.createStream({
+                    id: `/${Date.now()}`,
+                    partitions: 999,
+                })
+            }).toThrow('Validation error: invalid partitions')  // FAIL
+        })
+
+        it('create with owned domain id', async () => {
+            const streamId = 'testdomain1.eth/foo/bar' + Date.now()
+            const properties = {
+                id: streamId,
+            }
+            const createdStream = await getEndsOwnerClient().createStream(properties)
+            expect(createdStream.id).toBe(streamId)  // FAIL
+        })
+
+        it('create with integration key id', async () => {
+            const streamId = streamOwner.address + '/foo/bar' + Date.now()
+            const properties = {
+                id: streamId,
+            }
+            const createdStream = await streamOwnerClient.createStream(properties)
+            expect(createdStream.id).toBe(streamId)  // FAIL: should it create the stream with exact same casing or lowercasing? or fail as it currently does?
+        })
+
+        it('create with invalid id', () => {
+            expect(async () => {
+                const streamId = 'foobar.eth/loremipsum'
+                const properties = {
+                    id: streamId,
+                }
+                await streamOwnerClient.createStream(properties)
+            }).toThrow(`Validation error: invalid id "${streamId}"`) // FAIL: doesn't catch the contract error?
+        })
+
+        it('create stream with duplicate id', async () => {
+            const now = Date.now()
+            const streamId = 'testdomain1.eth/foobar/test/' + now
+            const properties = {
+                id: streamId,
+                name: 'Hello world!',
+            }
+            const createdStream = await getEndsOwnerClient().createStream(properties)
+            expect(createdStream.id).toBe(streamId)
+            expect(async () => {
+                await getEndsOwnerClient().createStream(properties)
+            }).toThrow(`Stream with id ${streamId} already exists`) // FAIL: NET-608
+        })
+
+        it('create stream with too long id', async () => {
+            let streamId = 'testdomain1.eth/foobar/' + Date.now() + '/'
+            while (streamId.length < 256) {
+                streamId = streamId + 'x'
+            }
+            const properties = {
+                id: streamId,
+            }
+            expect(async () => {
+                await getEndsOwnerClient().createStream(properties)
+            }).toThrow(`Validation error: invalid id "${streamId}"`)  // FAIL
+        })
+
+        /*
+        Maybe not applicable anymore?
+        it('create stream with too long description', async () => {
+            let streamId = 'testdomain1.eth/foobar/' + Date.now()
+            const description = 'x'.repeat(256)
+            const properties = {
+                id: streamId,
+                description
+            }
+            const response = getEndsOwnerClient().createStream(properties)
+            await assertStreamrClientResponseError(response, 422, 'VALIDATION_ERROR', `Invalid description: ${description}`)
+        })*/
+
+        /*
+        Maybe not applicable anymore?
+        it('create stream with too long name', async () => {
+            let streamId = 'testdomain1.eth/foobar/' + Date.now()
+            const name = 'x'.repeat(256)
+            const properties = {
+                id: streamId,
+                name
+            }
+            const response = getEndsOwnerClient().createStream(properties)
+            await assertStreamrClientResponseError(response, 422, 'VALIDATION_ERROR', `Invalid name: ${name}`)
+        })*/
+    })
+
+    /*
+    Not applicable anymore
+    describe('GET /api/v1/streams', () => {
+        it('finds stream by permission name in uppercase/lowercase', async () => {
+            const queryParams = {
+                operation: 'stream_DELETE',
+                noConfig: true,
+                grantedAccess: true,
+            }
+            const response = await Streamr.api.v1.streams
+                .list(queryParams)
+                .withAuthenticatedUser(streamOwner)
+                .call()
+            const json = await response.json()
+            assert.equal(response.status, 200)
+            const result = json.filter((stream: any) => stream.id == streamId)
+            assert.equal(result.length, 1, 'response should contain a single stream')
+        })
+    })*/
+
+    /*
+    Not applicable anymore
+    describe('GET /api/v1/streams/:id', () => {
+        it('works with uri-encoded ids', async () => {
+            const id = streamOwner.address + '/streams-api.test.js/stream-' + Date.now()
+            await streamOwnerClient.createStream({
+                id,
+            })
+            const json = await streamOwnerClient.getStream(id)
+            assert.equal(json.id, id)
+        })
+    })*/
+
+    describe('GET /api/v1/streams/:id/permissions/me', () => {
+        /*
+        Not applicable anymore
+        it('responds with status 404 when authenticated but stream does not exist', async () => {
+            const response = await Streamr.api.v1.streams.permissions
+                .getOwnPermissions('non-existing-stream-id')
+                .withAuthenticatedUser(streamOwner)
+                .call()
+            assert.equal(response.status, 404)
+        })*/
+        it('succeeds with authentication', async () => {
+            const stream = await streamOwnerClient.getOrCreateStream({
+                id: streamId
+            })
+            expect(async () => {
+                await stream.getMyPermissions()
+            }).not.toThrow()
+        })
+        it('succeeds with no authentication', async () => {
+            const stream = await getAnonymousClient().getOrCreateStream({
+                id: streamId
+            })
+            expect(async () => {
+                await stream.getMyPermissions()
+            }).not.toThrow()
+        })
+
+        /*
+        Not applicable anymore
+        it('responds with status 401 when wrong token even if endpoint does not require authentication', async () => {
+            const sessionToken = 'wrong-token'
+            const response = await Streamr.api.v1.streams.permissions
+                .getOwnPermissions(streamId)
+                .withHeader('Authorization', `Bearer ${sessionToken}`)
+                .call()
+            assert.equal(response.status, 401)
+        })
+        it('responds with status 401 when wrong session token even if endpoint does not require authentication', async () => {
+            const bearer = 'wrong-session-token'
+            const response = await Streamr.api.v1.streams.permissions
+                .getOwnPermissions(streamId)
+                .withHeader('Authorization', `Bearer ${bearer}`)
+                .call()
+            assert.equal(response.status, 401)
+        })*/
+    })
+
+    describe('GET /api/v1/streams/:id/validation', () => {
+        it('does not require authentication', async () => {
+            expect(async () => {
+                await getAnonymousClient().getStreamValidationInfo(streamId) // FAIL because the info is read from Core-API
+            }).not.toThrow()
+        })
+    })
+
+    describe('GET /api/v1/streams/:id/publishers', () => {
+        it('does not require authentication', async () => {
+            expect(async () => {
+                await getAnonymousClient().getStreamPublishers(streamId)
+            }).not.toThrow()
+        })
+    })
+
+    describe('GET /api/v1/streams/:id/publisher/0x0000000000000000000000000000000000000000', () => {
+        it('should return 200 if the stream has public publish permission', async () => {
+            const stream = await streamOwnerClient.createStream({
+                id: `/test-stream/${Date.now()}`,
+                name: 'Stream with public publish permission',
+            })
+            await stream.grantPublicPermission(StreamPermission.PUBLISH)
+            expect(await getAnonymousClient().isStreamPublisher(stream.id, ZERO_ADDRESS)).toBe(true)
+        })
+        it('should return 404 if the stream does not have public publish permission', async () => {
+            const stream = await streamOwnerClient.createStream({
+                id: `/test-stream/${Date.now()}`,
+                name: 'Stream without public publish permission',
+            })
+            expect(await getAnonymousClient().isStreamPublisher(stream.id, ZERO_ADDRESS)).toBe(false)
+        })
+    })
+
+    describe('GET /api/v1/streams/:id/subscribers', () => {
+        it('does not require authentication', async () => {
+            expect(async () => {
+                await getAnonymousClient().getStreamSubscribers(streamId)
+            }).not.toThrow()
+        })
+    })
+
+    describe('GET /api/v1/streams/:id/subscriber/0x0000000000000000000000000000000000000000', () => {
+        it('should return 200 if the stream has public subscribe permission', async () => {
+            const stream = await streamOwnerClient.createStream({
+                id: `/test-stream/${Date.now()}`,
+                name: 'Stream with public subscribe permission',
+            })
+            await stream.grantPublicPermission(StreamPermission.SUBSCRIBE)
+            expect(await getAnonymousClient().isStreamPublisher(stream.id, ZERO_ADDRESS)).toBe(true)
+        })
+        it('should return 404 if the stream does not have public subscribe permission', async () => {
+            const stream = await streamOwnerClient.createStream({
+                id: `/test-stream/${Date.now()}`,
+                name: 'Stream without public subscribe permission',
+            })
+            expect(await getAnonymousClient().isStreamPublisher(stream.id, ZERO_ADDRESS)).toBe(false)
+        })
+    })
+
+    /* FAIL TODO are there methods to manipulate fields in StreamrClient
+    describe('POST /api/v1/streams/:id/fields', () => {
+        it('requires authentication', async () => {
+            const response = await Streamr.api.v1.streams
+                .setFields(streamId, [
+                    {
+                        name: 'text',
+                        type: 'string',
+                    },
+                    {
+                        name: 'user',
+                        type: 'map',
+                    },
+                ])
+                .call()
+
+            await assertResponseIsError(response, 401, 'NOT_AUTHENTICATED')
+        })
+
+        it('validates existence of Stream', async () => {
+            const response = await Streamr.api.v1.streams
+                .setFields('non-existing-stream', [
+                    {
+                        name: 'text',
+                        type: 'string',
+                    },
+                    {
+                        name: 'user',
+                        type: 'map',
+                    },
+                ])
+                .withAuthenticatedUser(streamOwner)
+                .call()
+
+            await assertResponseIsError(response, 404, 'NOT_FOUND')
+        })
+
+        it('requires stream_edit permission on Stream', async () => {
+            const response = await Streamr.api.v1.streams
+                .setFields(streamId, [
+                    {
+                        name: 'text',
+                        type: 'string',
+                    },
+                    {
+                        name: 'user',
+                        type: 'map',
+                    },
+                ])
+                .withAuthenticatedUser(anonymousUser)
+                .call()
+
+            await assertResponseIsError(response, 403, 'FORBIDDEN', 'stream_edit')
+        })
+
+        context('when called with valid body and permissions', () => {
+            let response: Response
+
+            before(async () => {
+                response = await Streamr.api.v1.streams
+                    .setFields(streamId, [
+                        {
+                            name: 'text',
+                            type: 'string',
+                        },
+                        {
+                            name: 'user',
+                            type: 'map',
+                        },
+                    ])
+                    .withAuthenticatedUser(streamOwner)
+                    .call()
+            })
+
+            it('responds with 200', () => {
+                //assert.equal(response.status, 200)
+            })
+
+            it('updates stream config fields', async () => {
+                const json = await response.json()
+                assert.deepEqual(json.config.fields, [
+                    {
+                        name: 'text',
+                        type: 'string',
+                    },
+                    {
+                        name: 'user',
+                        type: 'map',
+                    },
+                ])
+            })
+        })
+    })*/
+
+    describe('DELETE /api/v1/streams/:id', () => {
+
+        it('happy path', async () => {
+            const stream = await streamOwnerClient.createStream({
+                id: `/test-stream/${Date.now()}`,
+                name: 'stream-id-' + Date.now(),
+            })
+            expect(async () => {
+                await stream.delete()
+            }).not.toThrow()
+        })
+
+        it('deletes a stream with a permission', async () => {
+            const stream = await streamOwnerClient.createStream({
+                id: `/test-stream/${Date.now()}`,
+                name: 'stream-id-' + Date.now(),
+            })
+            await stream.grantUserPermission(StreamPermission.GRANT, anonymousUser.address)
+            expect(async () => {
+                await stream.delete()  // FAIL
+            }).not.toThrow()
+        })
+
+        it('deletes streams storage nodes', async () => {
+            const storageNodeAddress = StreamrClient.generateEthereumAccount().address
+            const stream = await streamOwnerClient.createStream({
+                id: `/test-stream/${Date.now()}`,
+                name: 'stream-id-' + Date.now(),
+            })
+            await stream.addToStorageNode(storageNodeAddress)
+            expect(await streamOwnerClient.isStreamStoredInStorageNode(stream.id, storageNodeAddress)).toBe(true)  // FAIL: maybe also test misconfigured, should we call setNode()?
+            await stream.delete()
+            expect(await streamOwnerClient.isStreamStoredInStorageNode(stream.id, storageNodeAddress)).toBe(false)
+        })
     })
 })

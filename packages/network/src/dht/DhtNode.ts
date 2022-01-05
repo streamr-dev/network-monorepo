@@ -11,6 +11,8 @@ export class DhtNode {
     private ownId: Uint8Array
     private ownContact: Contact
 
+    private numberOfIncomingRpcCalls = 0
+
     constructor(ownId: Uint8Array) {
         this.ownId = ownId
         this.ownContact = new Contact(this.ownId, this)
@@ -29,14 +31,22 @@ export class DhtNode {
     public getKBucketSize(): number {
         return this.bucket.count()
     }
+
+    public getNumberOfIncomingRpcCalls(): number {
+        return this.numberOfIncomingRpcCalls
+    }
     
     // RPC call
 
     public getClosestNodesTo(id: Uint8Array, caller: DhtNode): Contact[] {
+        this.numberOfIncomingRpcCalls++
+        const ret = this.bucket.closest(id)
+        
         if (!this.bucket.get(id)) {
             this.bucket.add(new Contact(id, caller))
         }
-        return this.bucket.closest(id)
+        
+        return ret
     }
 
     private findMoreContacts(contactList: Contact[], shortlist: SortedContactList) {

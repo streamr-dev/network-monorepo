@@ -25,7 +25,7 @@ export class DhtSimulation {
 
         for (let i = this.nodes.length-1; i >= 0; i--) {
             // eslint-disable-next-line no-console
-            console.log(this.nodes[i].getKBucketSize() + ',')
+            console.log(this.nodes[i].getKBucketSize() + ',' + this.nodes[i].getNumberOfIncomingRpcCalls())
         }
     }
 }

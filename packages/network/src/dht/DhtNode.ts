@@ -4,7 +4,7 @@ import { SortedContactList } from './SortedContactList'
 
 export class DhtNode {
 
-    private K = 20
+    private K = 8
     private ALPHA = 3
 
     private bucket: KBucket<Contact>
@@ -15,7 +15,8 @@ export class DhtNode {
         this.ownId = ownId
         this.ownContact = new Contact(this.ownId, this)
         this.bucket = new KBucket({
-            localNodeId: this.ownId
+            localNodeId: this.ownId,
+            numberOfNodesPerKBucket: this.K
         })
     }
 

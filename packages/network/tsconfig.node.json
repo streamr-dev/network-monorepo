@@ -5,7 +5,8 @@
         "outDir": "dist"
     },
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "test/dht/data/*.json"
     ],
     "exclude": [
         "dist",

@@ -34,6 +34,7 @@
     "sub": "node $NODE_DEBUG_OPTION bin/subscriber.js",
     "sub-1": "node $NODE_DEBUG_OPTION bin/subscriber.js --port=30335",
     "sub-2": "node $NODE_DEBUG_OPTION bin/subscriber.js --port=30345",
+    "prepare-dht": "cd  test/dht/data && ts-node generatedhtids.ts",
     "simulate-dht": "ts-node $NODE_DEBUG_OPTION src/dht/DhtSimulation.ts",
     "test": "jest",
     "test-browser": "npm run build-browser && karma start karma.config.js",

@@ -7,7 +7,8 @@
     },
     "include": [
         "src/**/*",
-        "test/**/*"
+        "test/**/*",
+        "test/dht/data/*"
     ],
     "exclude": [
         "test/**/BrowserWebRtcConnection.test.ts",

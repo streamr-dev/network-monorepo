@@ -12,6 +12,9 @@ export class DhtNode {
     private ownContact: Contact
 
     private numberOfIncomingRpcCalls = 0
+    private numberOfOutgoingRpcCalls = 0
+
+    private neighborList: SortedContactList
 
     constructor(ownId: Uint8Array) {
         this.ownId = ownId
@@ -20,10 +23,15 @@ export class DhtNode {
             localNodeId: this.ownId,
             numberOfNodesPerKBucket: this.K
         })
+
+        this.neighborList = new SortedContactList(this.ownId, [])
     }
 
     // For simulation use
 
+    public getNeightborList(): SortedContactList {
+        return this.neighborList
+    }
     public getContact(): Contact {
         return this.ownContact
     }
@@ -35,6 +43,10 @@ export class DhtNode {
     public getNumberOfIncomingRpcCalls(): number {
         return this.numberOfIncomingRpcCalls
     }
+
+    public getNumberOfOutgoingRpcCalls(): number {
+        return this.numberOfOutgoingRpcCalls
+    }
     
     // RPC call
 
@@ -43,7 +55,9 @@ export class DhtNode {
         const ret = this.bucket.closest(id)
         
         if (!this.bucket.get(id)) {
-            this.bucket.add(new Contact(id, caller))
+            const contact = new Contact(id, caller)
+            this.bucket.add(contact)
+            this.neighborList.addContact(contact)
         }
         
         return ret
@@ -52,8 +66,10 @@ export class DhtNode {
     private findMoreContacts(contactList: Contact[], shortlist: SortedContactList) {
         contactList.forEach( (contact) => {
             shortlist.setContacted(contact.id)
-            const returnedContacts = contact.dhtNode.getClosestNodesTo(this.ownId, this)
-            shortlist.setContacts(returnedContacts)
+            shortlist.setActive(contact.id)
+            this.numberOfOutgoingRpcCalls++
+            const returnedContacts = contact.dhtNode!.getClosestNodesTo(this.ownId, this)
+            shortlist.addContacts(returnedContacts)
             returnedContacts.forEach( (returnedContact) => {
                 if (!this.bucket.get(returnedContact.id)) {
                     this.bucket.add(returnedContact)
@@ -63,30 +79,38 @@ export class DhtNode {
     }
 
     public joinDht(entryPoint: DhtNode): void {
+        if (Buffer.compare(entryPoint.getContact().id, this.ownId) == 0) {
+            return
+        }
+
         this.bucket.add(entryPoint.getContact())
-        const shortlist = new SortedContactList(this.ownId, this.bucket.closest(this.ownId, this.ALPHA))
+        const closest = this.bucket.closest(this.ownId, this.ALPHA)
+
+        this.neighborList.addContacts(closest)
 
         while (true) {
-            let oldClosestContactId = shortlist.getClosestContactId()
-            let uncontacted = shortlist.getUncontactedContacts(this.ALPHA)
+            let oldClosestContactId = this.neighborList.getClosestContactId()
+            let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
 
-            this.findMoreContacts(uncontacted, shortlist)
+            this.findMoreContacts(uncontacted, this.neighborList)
 
-            if (shortlist.getActiveContacts().length >= this.K) {
+            /*
+            if (this.neighborList.getActiveContacts().length >= this.K) {
                 return
             }
+            */
 
-            else if (oldClosestContactId == shortlist.getClosestContactId()) {
-                uncontacted = shortlist.getUncontactedContacts(this.K)
+            if (oldClosestContactId == this.neighborList.getClosestContactId()) {
+                uncontacted = this.neighborList.getUncontactedContacts(this.K)
 
                 while (true) {
-                    oldClosestContactId = shortlist.getClosestContactId()
-                    this.findMoreContacts(uncontacted, shortlist)
+                    oldClosestContactId = this.neighborList.getClosestContactId()
+                    this.findMoreContacts(uncontacted, this.neighborList)
 
-                    if (shortlist.getActiveContacts().length >= this.K || oldClosestContactId == shortlist.getClosestContactId()) {
+                    if (this.neighborList.getActiveContacts().length >= this.K || oldClosestContactId == this.neighborList.getClosestContactId()) {
                         return
                     }
-                    uncontacted = shortlist.getUncontactedContacts(this.ALPHA)
+                    uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
                 }
             }
         }

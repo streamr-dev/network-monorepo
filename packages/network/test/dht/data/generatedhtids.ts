@@ -5,7 +5,7 @@ import { Contact } from '../../../src/dht/Contact'
 import KBucket from 'k-bucket'
 
 const ID_LENGTH = 8
-const NUM_NODES = 1000
+const NUM_NODES = 100
 
 const generateId = function (): Uint8Array {
     return crypto.randomBytes(ID_LENGTH)

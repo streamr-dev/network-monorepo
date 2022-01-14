@@ -59,14 +59,15 @@ export class SortedContactList {
 
     public getUncontactedContacts(num: number): Contact[] {
         const ret: Contact[] = []
-        this.contactIds.forEach((contactId) => {
+        for (let i = 0; i < this.contactIds.length; i++) {
+            const contactId = this.contactIds[i]
             if (!this.contactsById[JSON.stringify(contactId)].contacted) {
                 ret.push(this.contactsById[JSON.stringify(contactId)].contact)
                 if (ret.length >= num) {
                     return ret
                 }
             }
-        })
+        }
         return ret
     }
 

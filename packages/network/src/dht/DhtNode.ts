@@ -99,15 +99,16 @@ export class DhtNode {
                 return
             }
             */
-
-            if (oldClosestContactId == this.neighborList.getClosestContactId()) {
+            
+            if (Buffer.compare(oldClosestContactId, this.neighborList.getClosestContactId()) == 0) {
                 uncontacted = this.neighborList.getUncontactedContacts(this.K)
 
                 while (true) {
                     oldClosestContactId = this.neighborList.getClosestContactId()
                     this.findMoreContacts(uncontacted, this.neighborList)
 
-                    if (this.neighborList.getActiveContacts().length >= this.K || oldClosestContactId == this.neighborList.getClosestContactId()) {
+                    if (this.neighborList.getActiveContacts().length >= this.K || 
+                    Buffer.compare(oldClosestContactId, this.neighborList.getClosestContactId()) == 0) {
                         return
                     }
                     uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)

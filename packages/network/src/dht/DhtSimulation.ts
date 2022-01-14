@@ -56,6 +56,17 @@ export class DhtSimulation {
             })
             // eslint-disable-next-line no-console
             console.log(kadString)
+
+            let correctNeighbors = 0
+            for (let j=0; j < this.groundTruth[i+''].length; j++) {
+                if (this.groundTruth[i+''][j].name !=  (this.nodeNamesById[JSON.stringify(kademliaNeighbors[j])]+'')) {
+                    break
+                }
+                correctNeighbors++
+            }
+
+            // eslint-disable-next-line no-console
+            console.log('Correct neighbors: ' + correctNeighbors)
         }
     }
 }

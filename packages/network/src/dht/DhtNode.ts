@@ -91,8 +91,9 @@ export class DhtNode {
         while (true) {
             let oldClosestContactId = this.neighborList.getClosestContactId()
             let uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
-            if (uncontacted.length < 1)
+            if (uncontacted.length < 1) {
                 return
+            }
 
             this.findMoreContacts(uncontacted, this.neighborList)
 
@@ -104,8 +105,9 @@ export class DhtNode {
             
             if (Buffer.compare(oldClosestContactId, this.neighborList.getClosestContactId()) == 0) {
                 uncontacted = this.neighborList.getUncontactedContacts(this.K)
-                if (uncontacted.length < 1)
+                if (uncontacted.length < 1) {
                     return
+                }
 
                 while (true) {
                     oldClosestContactId = this.neighborList.getClosestContactId()
@@ -116,8 +118,9 @@ export class DhtNode {
                         return
                     }
                     uncontacted = this.neighborList.getUncontactedContacts(this.ALPHA)
-                    if (uncontacted.length < 1)
+                    if (uncontacted.length < 1) {
                         return
+                    }
                 }
             }
         }

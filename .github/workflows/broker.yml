@@ -46,17 +46,17 @@ jobs:
     name: Test Integration
     runs-on: ubuntu-latest
     services:
-      cassandra:
-          container_name: streamr-dev-cassandra
-          image: streamr/cassandra:v0.0.1
-          ports:
-              - 7000:7000
-              - 7001:7001
-              - 7199:7199
-              - 9042:9042
-              - 9160:9160
-        options: >-
-          --health-cmd 'nodetool status 127.0.0.1'
+      - cassandra:
+            container_name: streamr-dev-cassandra
+            image: streamr/cassandra:v0.0.1
+            ports:
+                - 7000:7000
+                - 7001:7001
+                - 7199:7199
+                - 9042:9042
+                - 9160:9160
+          options: >-
+            --health-cmd 'nodetool status 127.0.0.1'
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3

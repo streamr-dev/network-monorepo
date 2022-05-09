@@ -50,7 +50,7 @@
     "ipaddr.js": "^2.0.1",
     "lodash": "^4.17.21",
     "node-datachannel": "^0.2.4",
-    "pino": "^6.11.3",
+    "pino": "^7.11.0",
     "setimmediate": "^1.0.5",
     "streamr-client-protocol": "^12.0.0",
     "strict-event-emitter-types": "^2.0.0",
@@ -68,8 +68,7 @@
     "@types/jest": "^27.0.2",
     "@types/lodash": "^4.14.175",
     "@types/node": "^16.10.6",
-    "@types/pino": "^6.3.8",
-    "@types/pino-pretty": "^4.7.0",
+    "@types/pino": "^7.0.5",
     "@types/uuid": "^8.3.1",
     "@types/websocket": "^1.0.3",
     "@types/ws": "^7.4.5",
@@ -106,7 +105,6 @@
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.5",
-    "pino-pretty": "^5.0.2",
     "utf-8-validate": "^5.0.7"
   }
 }

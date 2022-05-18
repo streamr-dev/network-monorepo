@@ -18,8 +18,7 @@ export function IteratorTest(name, fn) {
             expect(received).toEqual(expected)
         })
 
-        // TODO: fix in NET-621
-        it.skip('can return in finally', async () => {
+        it('can return in finally', async () => {
             const received = []
             const itr = (async function* Outer() {
                 const innerItr = fn({

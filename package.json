@@ -3,7 +3,7 @@
     "private": true,
     "scripts": {
         "check": "npm run --workspaces --if-present check",
-        "prepare": "husky install && npm run versions",
+        "prepare": "chmod a+x node_modules/.bin/husky && husky install && npm run versions",
         "bootstrap": "npm ci --no-audit",
         "bootstrap-pkg": "npm ci --no-audit --include-workspace-root --workspace",
         "versions": "zx ./show-versions.mjs && manypkg check",

@@ -20,6 +20,7 @@
     },
     "scripts": {
         "build": "npm run bootstrap-dist && npm run build-node",
+        "release": "cd dist && npm publish",
         "build-production": "npm run clean; npm run bootstrap-dist && NODE_ENV=production npm run build-node && npm run build-browser-production",
         "check": "tsc -p ./tsconfig.json --noEmit",
         "prepare": "npm run build",

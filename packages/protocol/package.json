@@ -21,7 +21,8 @@
     "test": "jest",
     "test-unit": "jest test/unit --detectOpenHandles",
     "coverage": "jest --coverage",
-    "docs": "typedoc --options typedoc.js"
+    "docs": "typedoc --options typedoc.js",
+    "release": "npm publish"
   },
   "author": "Streamr",
   "license": "Apache-2.0",

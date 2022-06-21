@@ -19,6 +19,19 @@ const headerNames = [...pkgNames].map((name, index) => `${chalk.white(name)}\n${
 // package names are column names
 const table = new Table({ head: [legend, ...headerNames] })
 
+const publishedPackageNames = [...pkgNames].filter((pkgName) => (pkgName === 'streamr-client' || !pkgJSONs[pkgName].private))
+
+//const publishedDistTags = (await Promise.all(publishedPackageNames.map(async (pkgName) => {
+    //const d = await (await $`npm info ${pkgName} dist-tags --json`).stdout
+    //console.log({ pkgName: d })
+    //return JSON.parse(d)
+//}))).reduce((obj, distTags, index) => {
+    //obj[publishedPackageNames[index]] = distTags
+    //return obj
+//}, {})
+
+//console.log(publishedDistTags)
+const npmTable = new Table({ head: [legend, ...headerNames] })
 
 const warnings = []
 packages.forEach((pkg, index) => {

@@ -2,6 +2,9 @@
   "name": "@streamr/dev-config",
   "version": "1.0.0",
   "description": "Streamr Development Environment Configs",
+  "scripts": {
+      "release": "npm publish"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/network-monorepo.git",

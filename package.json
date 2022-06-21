@@ -13,7 +13,7 @@
         "eslint": "npm run eslint --workspaces --if-present && manypkg check",
         "fix": "manypkg fix; npm run eslint -- --fix",
         "clean-cache": "npx --workspaces --include-workspace-root -c 'rm -rf node_modules/.cache || true'",
-        "bootstrap-root": "npm ci --no-audit --no-workspaces # install only packages needed by root package.json",
+        "bootstrap-root": "npm ci --no-audit --include-workspace-root --workspace @streamr/monorepo-tools # install only packages needed by root package.json",
         "clean-dist": "npx --workspaces -c 'npm run --if-present clean || rm -rf dist *.tsbuildinfo || true' && npm run clean-cache # remove built files",
         "clean-package-locks": "npx --workspaces --include-workspace-root -c 'rm -f package-lock.json || true'"
     },
@@ -21,6 +21,7 @@
         "packages/dev-config",
         "packages/eslint-config-monorepo",
         "packages/test-utils",
+        "packages/monorepo-tools",
         "packages/protocol",
         "packages/network",
         "packages/network-tracker",

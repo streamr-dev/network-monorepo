@@ -1,0 +1,15 @@
+{
+    "extends": "@streamr/dev-config/ts/tsconfig.node.json",
+    "compilerOptions": {
+        "composite": true,
+        "outDir": "dist"
+    },
+    "include": [
+        "package.json",
+        "src/**/*",
+        "bin/**/*"
+    ],
+    "references": [
+        { "path": "../client/tsconfig.node.json" }
+    ]
+}

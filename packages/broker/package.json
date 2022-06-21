@@ -17,6 +17,7 @@
   "scripts": {
     "check": "tsc -p ./tsconfig.json --noEmit",
     "prepare": "npm run build",
+    "release": "npm publish",
     "test": "jest test/unit test/integration && npm run test-sequential",
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json",
     "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",

@@ -28,6 +28,7 @@
     "network": "node $NODE_DEBUG_OPTION bin/network.js",
     "prepare": "npm run build",
     "prepublishOnly": "npm run clean && NODE_ENV=production tsc -b tsconfig.node.json && NODE_ENV=production webpack --mode=production",
+    "release": "npm publish",
     "pub": "node $NODE_DEBUG_OPTION bin/publisher.js",
     "pub-1": "node $NODE_DEBUG_OPTION bin/publisher.js --port=30323",
     "pub-2": "node $NODE_DEBUG_OPTION bin/publisher.js --port=30333",

@@ -53,7 +53,8 @@ export class TrackerServer extends EventEmitter {
     async sendInstruction(
         receiverNodeId: NodeId,
         streamPartId: StreamPartID,
-        nodeIds: NodeId[], counter: number
+        nodeIds: NodeId[],
+        counter: number
     ): Promise<void> {
         const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
         await this.send(receiverNodeId, new TrackerLayer.InstructionMessage({
@@ -62,6 +63,18 @@ export class TrackerServer extends EventEmitter {
             streamPartition,
             nodeIds,
             counter
+        }))
+    }
+
+    async sendStatusAck(
+        receiverNodeId: NodeId,
+        streamPartId: StreamPartID
+    ): Promise<void> {
+        const [streamId, streamPartition] = StreamPartIDUtils.getStreamIDAndPartition(streamPartId)
+        await this.send(receiverNodeId, new TrackerLayer.StatusAckMessage({
+            requestId: uuidv4(),
+            streamId,
+            streamPartition
         }))
     }
 

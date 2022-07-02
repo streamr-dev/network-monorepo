@@ -17,7 +17,8 @@ const createMockInstruction = (streamPartId: StreamPartID): Instruction => {
         nodeId: `mock-node-id-${mockInstructionIdSuffix}`,
         streamPartId,
         newNeighbors: [],
-        counterValue: 0
+        counterValue: 0,
+        ackOnly: false
     }
 }
 
@@ -31,8 +32,8 @@ describe('InstructionSender', () => {
         send = jest.fn().mockResolvedValue(true)
         sender = new InstructionSender({
             debounceWait: DEBOUNCE_WAIT,
-            maxWait: MAX_WAIT
-        }, send, new MetricsContext())
+            maxWait: MAX_WAIT,
+        }, send, undefined as any, new MetricsContext()) // TODO implement sendStatusAck
     })
 
     afterEach(() => {

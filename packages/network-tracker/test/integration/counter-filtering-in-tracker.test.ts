@@ -10,12 +10,12 @@ import { toStreamID } from 'streamr-client-protocol'
 
 const WAIT_TIME = 2000
 
-const formStatus = (counter1: number, nodes1: NodeId[]): Partial<Status> => ({
+const formStatus = (counter: number, nodes: NodeId[]): Partial<Status> => ({
     streamPart: {
         id: toStreamID('stream-1'),
         partition: 0,
-        neighbors: nodes1,
-        counter: counter1
+        neighbors: nodes,
+        counter: counter
     }
 })
 
@@ -50,7 +50,7 @@ describe('tracker: instruction counter filtering', () => {
         await runAndWaitForEvents([
             () => { nodeToTracker1.sendStatus(tracker.getTrackerId(), formStatus(0, []) as Status) },
         ], [
-            [nodeToTracker1, NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED],
+            [nodeToTracker1, NodeToTrackerEvent.STATUS_ACK_RECEIVED],
         ])
 
         await runAndWaitForEvents([

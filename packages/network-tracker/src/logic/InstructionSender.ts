@@ -27,10 +27,11 @@ const DEFAULT_TOPOLOGY_STABILIZATION_OPTIONS: TopologyStabilizationOptions = {
 const logger = new Logger(module)
 
 export interface Instruction {
-    nodeId: NodeId,
-    streamPartId: StreamPartID,
-    newNeighbors: NodeId[],
+    nodeId: NodeId
+    streamPartId: StreamPartID
+    newNeighbors: NodeId[]
     counterValue: number
+    ackOnly: boolean
 }
 
 class StreamPartInstructionBuffer {
@@ -65,6 +66,11 @@ export type SendInstructionFn = (
     counter: number
 ) => Promise<void>
 
+export type SendStatusAckFn = (
+    receiverNodeId: NodeId,
+    streamPartId: StreamPartID
+) => Promise<void>
+
 interface Metrics extends MetricsDefinition {
     instructionSent: Metric
 }
@@ -73,15 +79,18 @@ export class InstructionSender {
     private readonly streamPartBuffers = new Map<StreamPartID, StreamPartInstructionBuffer>()
     private readonly options: TopologyStabilizationOptions
     private readonly sendInstruction: SendInstructionFn
+    private readonly sendStatusAck: SendStatusAckFn
     private readonly metrics: Metrics
 
     constructor(
         options: TopologyStabilizationOptions | undefined,
         sendInstruction: SendInstructionFn,
+        sendStatusAck: SendStatusAckFn,
         metricsContext: MetricsContext
     ) {
         this.options = options ?? DEFAULT_TOPOLOGY_STABILIZATION_OPTIONS
         this.sendInstruction = sendInstruction
+        this.sendStatusAck = sendStatusAck
         this.metrics = {
             instructionSent: new RateMetric()
         }
@@ -113,18 +122,18 @@ export class InstructionSender {
 
     private async sendInstructions(buffer: StreamPartInstructionBuffer): Promise<void> {
         const promises = Array.from(buffer.getInstructions())
-            .map(async ({ nodeId, streamPartId, newNeighbors, counterValue }) => {
+            .map(async ({ ackOnly, nodeId, streamPartId, newNeighbors, counterValue }) => {
                 this.metrics.instructionSent.record(1)
                 try {
-                    await this.sendInstruction(
-                        nodeId,
-                        streamPartId,
-                        newNeighbors,
-                        counterValue
-                    )
-                    logger.debug('instruction %o sent to node %o', newNeighbors, { counterValue, streamPartId, nodeId })
+                    if (ackOnly) {
+                        await this.sendStatusAck(nodeId, streamPartId)
+                        logger.debug('statusAck %s sent to node %s', streamPartId, nodeId)
+                    } else {
+                        await this.sendInstruction(nodeId, streamPartId, newNeighbors, counterValue)
+                        logger.debug('instruction %o sent to node %o', newNeighbors, { counterValue, streamPartId, nodeId })
+                    }
                 } catch (err) {
-                    logger.error('failed to send instructions %o to node %o, reason: %s',
+                    logger.error('failed to send instructions / ack %o to node %o, reason: %s',
                         newNeighbors,
                         { counterValue, streamPartId, nodeId },
                         err)

@@ -17,7 +17,6 @@ import {
     DisconnectionReason,
     MetricsContext,
     Logger,
-    COUNTER_LONE_NODE,
     COUNTER_UNSUBSCRIBE,
     MetricsDefinition,
     Metric,
@@ -171,6 +170,7 @@ export class Tracker extends EventEmitter {
         this.instructionSender = new InstructionSender(
             opts.topologyStabilization,
             this.trackerServer.sendInstruction.bind(this.trackerServer),
+            this.trackerServer.sendStatusAck.bind(this.trackerServer),
             metricsContext
         )
     }
@@ -213,7 +213,7 @@ export class Tracker extends EventEmitter {
         // update topology
         this.createTopology(streamPartId)
         this.updateNodeOnStream(source, status.streamPart)
-        this.formAndSendInstructions(source, streamPartId)
+        this.formAndSendInstructions(source, status.streamPart.counter, streamPartId)
     }
 
     async stop(): Promise<void> {
@@ -245,23 +245,31 @@ export class Tracker extends EventEmitter {
         }
     }
 
-    private formAndSendInstructions(node: NodeId, streamPartId: StreamPartID, forceGenerate = false): void {
+    private formAndSendInstructions(
+        node: NodeId,
+        statusCounter: number | undefined,
+        streamPartId: StreamPartID,
+        forceGenerate = false
+    ): void {
         if (this.stopped) {
             return
         }
 
-        if (this.overlayPerStreamPart[streamPartId]) {
-            const instructions = this.overlayPerStreamPart[streamPartId].formInstructions(node, forceGenerate)
+        const overlay = this.overlayPerStreamPart[streamPartId]
+        if (overlay !== undefined) {
+            const instructions = overlay.formInstructions(node, forceGenerate)
+
+            const isAloneInTopology = overlay.hasNode(node) && overlay.getNumberOfNodes() === 1
 
             // Send empty instruction if and only if the node is alone in the topology
-            if (this.overlayPerStreamPart[streamPartId].hasNode(node)
-                && this.overlayPerStreamPart[streamPartId].getNumberOfNodes() === 1
-                && Object.keys(instructions).length === 0) {
+            if (isAloneInTopology && Object.keys(instructions).length === 0 && statusCounter !== undefined) {
+                //const counterValue = this.instructionCounter.setOrIncrement(node, streamPartId)
                 this.instructionSender.addInstruction({
                     nodeId: node,
                     streamPartId,
                     newNeighbors: [],
-                    counterValue: COUNTER_LONE_NODE
+                    counterValue: statusCounter,
+                    ackOnly: true
                 })
             } else {
                 Object.entries(instructions).forEach(([nodeId, newNeighbors]) => {
@@ -270,11 +278,11 @@ export class Tracker extends EventEmitter {
                         nodeId,
                         streamPartId,
                         newNeighbors,
-                        counterValue
+                        counterValue,
+                        ackOnly: false
                     })
                 })
             }
-
         }
     }
 
@@ -297,7 +305,7 @@ export class Tracker extends EventEmitter {
             delete this.overlayPerStreamPart[streamPartId]
         } else {
             neighbors.forEach((neighbor) => {
-                this.formAndSendInstructions(neighbor, streamPartId, true)
+                this.formAndSendInstructions(neighbor, undefined, streamPartId, true)
             })
         }
     }

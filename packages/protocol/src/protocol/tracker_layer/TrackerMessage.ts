@@ -11,7 +11,8 @@ export enum TrackerMessageType {
     StatusMessage = 1,
     InstructionMessage = 2,
     RelayMessage = 5,
-    ErrorMessage = 6
+    ErrorMessage = 6,
+    StatusAckMessage = 7
 }
 
 export interface TrackerMessageOptions {

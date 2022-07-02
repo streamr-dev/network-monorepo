@@ -1,6 +1,5 @@
 import { StreamPartID, TrackerLayer, Utils } from 'streamr-client-protocol'
 import { Location, Rtts, TrackerInfo, NodeId, TrackerId } from '../identifiers'
-import { COUNTER_LONE_NODE } from '../constants'
 import { TrackerConnector } from './TrackerConnector'
 import { NodeToTracker, Event as NodeToTrackerEvent } from '../protocol/NodeToTracker'
 import { StreamPartManager } from './StreamPartManager'
@@ -85,15 +84,14 @@ export class TrackerManager {
                 this.sendStatus(streamPart, trackerId)
             })
         })
-        this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, (instructionMessage, trackerId) => {
-            const streamPartID = instructionMessage.getStreamPartID()
-            if (instructionMessage.counter === COUNTER_LONE_NODE) {
-                if (this.streamPartManager.isSetUp(streamPartID) && this.streamPartManager.isNewStream(streamPartID)) {
-                    this.subscriber.emitJoinCompleted(instructionMessage.getStreamPartID(), 0)
-                }
-            } else {
-                this.instructionThrottler.add(instructionMessage, trackerId)
+        this.nodeToTracker.on(NodeToTrackerEvent.STATUS_ACK_RECEIVED, (statusAckMessage) => {
+            const streamPartId = statusAckMessage.getStreamPartID()
+            if (this.streamPartManager.isSetUp(streamPartId) && this.streamPartManager.isNewStream(streamPartId)) {
+                this.subscriber.emitJoinCompleted(streamPartId, 0)
             }
+        })
+        this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_INSTRUCTION_RECEIVED, (instructionMessage, trackerId) => {
+            this.instructionThrottler.add(instructionMessage, trackerId)
         })
         this.nodeToTracker.on(NodeToTrackerEvent.TRACKER_DISCONNECTED, (trackerId) => {
             logger.trace('disconnected from tracker %s', trackerId)

@@ -152,6 +152,18 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg.counter).toEqual(15)
     })
 
+    it('sendStatusAck is delivered', async () => {
+        const messagePromise = waitForEvent(nodeToTracker, NodeToTrackerEvent.STATUS_ACK_RECEIVED)
+        trackerServer.sendStatusAck('node1', StreamPartIDUtils.parse('stream#10'))
+        const [msg, trackerId]: any = await messagePromise
+
+        expect(trackerId).toEqual('trackerServer')
+        expect(msg).toBeInstanceOf(TrackerLayer.StatusAckMessage)
+        expect(msg.requestId).toMatch(UUID_REGEX)
+        expect(msg.streamId).toEqual('stream')
+        expect(msg.streamPartition).toEqual(10)
+    })
+
     it('sendStatus is delivered', async () => {
         const messagePromise = waitForEvent(trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
         nodeToTracker.sendStatus('trackerServer', {

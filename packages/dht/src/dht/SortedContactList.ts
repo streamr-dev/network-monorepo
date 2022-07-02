@@ -76,14 +76,14 @@ export class SortedContactList {
         return ret
     }
 
-    public getActiveContacts(): DhtPeer[] {
+    public getActiveContacts(limit = this.maxSize): DhtPeer[] {
         const ret: DhtPeer[] = []
         this.contactIds.forEach((contactId) => {
             if (this.isActive(contactId)) {
                 ret.push(this.contactsById[contactId.toMapKey()].contact)
             }
         })
-        return ret
+        return ret.splice(0, limit)
     }
 
     public compareIds(id1: PeerID, id2: PeerID): number {

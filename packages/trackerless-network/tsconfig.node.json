@@ -1,19 +1,21 @@
 {
     "extends": "../../tsconfig.node.json",
     "compilerOptions": {
+        "composite": true,
         "outDir": "dist"
     },
     "include": [
-        "src/**/*",
-        "google/**/*"
+        "src/**/*"
     ],
     "exclude": [
-        "dist",
-        "src/connection/WebRTC/BrowserWebRtcConnection.ts"
+        "dist"
     ],
     "references": [
         {
             "path": "../proto-rpc/tsconfig.node.json"
+        },
+        {
+            "path": "../dht/tsconfig.node.json"
         }
     ]
 }

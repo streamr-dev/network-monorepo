@@ -1,18 +1,10 @@
-import { SimulatorTransport } from './connection/SimulatorTransport'
-import { Simulator } from './connection/Simulator'
-import { DhtNode } from './dht/DhtNode'
-import { PeerID } from './helpers/PeerID'
-
-const main = async () => {
-
-    const mockDescriptor = {
-        peerId: PeerID.fromString('jee').value,
-        type: 0
-    }
-    const simulator = new Simulator()
-    const mockConnectionLayer = new SimulatorTransport(mockDescriptor, simulator)
-    
-    new DhtNode({peerIdString: 'peer', transportLayer: mockConnectionLayer})
-}
-
-main()
+export { DhtNode, Event as DhtNodeEvent } from './dht/DhtNode'
+export { RoutingRpcCommunicator } from './transport/RoutingRpcCommunicator'
+export { SimulatorTransport } from './connection/SimulatorTransport'
+export { Simulator } from './connection/Simulator'
+export { PeerDescriptor, Message } from './proto/DhtRpc'
+export { ITransport } from './transport/ITransport'
+export { ConnectionManager } from './connection/ConnectionManager'
+export { PeerID } from './helpers/PeerID'
+export { DhtPeer } from './dht/DhtPeer'
+export { UUID } from './helpers/UUID'

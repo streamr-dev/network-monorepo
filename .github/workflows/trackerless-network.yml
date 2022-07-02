@@ -1,0 +1,53 @@
+---
+# Lint, Test and Publish
+name: Trackerless Network
+
+on:
+  push:
+    tags:
+      - '*'
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+concurrency:
+  group: dht-build-${{ github.head_ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    working-directory: packages/dht
+jobs:
+  test-nodejs:
+    name: Lint & Test NodeJS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          cache-dependency-path: package-lock.json
+          cache: 'npm'
+          node-version-file: '.nvmrc'
+      - name: Install protoc
+        run: |
+          version=21.1
+          archive=protoc-${version}-linux-x86_64.zip
+          curl -O -L https://github.com/protocolbuffers/protobuf/releases/download/v${version}/${archive}
+          sudo unzip -d '/usr/local' ${archive} 'bin/*' 'include/*'
+          sudo chmod 755 /usr/local/bin/protoc
+          rm ${archive}
+          protoc --version
+      - name: bootstrap-pkg
+        working-directory: './'
+        run: |
+          npm run bootstrap-pkg @streamr/proto-rpc
+          npm run build --workspace=@streamr/proto-rpc
+          npm run bootstrap-pkg @streamr/dht
+          npm run build --workspace=@streamr/dht
+          npm run bootstrap-pkg @streamr/trackerless-network
+          npm run build --workspace=@streamr/trackerless-network
+      - name: Eslint
+        run: npm run eslint
+      - name: Tests
+        run: npm run test
+

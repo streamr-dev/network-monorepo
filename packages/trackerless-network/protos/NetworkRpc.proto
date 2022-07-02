@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+option optimize_for = CODE_SIZE;
+
+import "google/protobuf/empty.proto";
+
+service NetworkRpc {
+  rpc sendData (DataMessage) returns (google.protobuf.Empty);
+  rpc handshake (HandshakeRequest) returns (HandshakeResponse);
+  rpc leaveNotice (LeaveNotice) returns (google.protobuf.Empty);
+}
+
+message MessageRef {
+  int32 timestamp = 1;
+  int32 sequenceNumber = 2;
+}
+
+message DataMessage {
+  string content = 1;
+  string senderId = 2;
+  string streamPartId = 3;
+  MessageRef messageRef = 4;
+  optional MessageRef previousMessageRef = 5;
+  optional string previousPeer = 6;
+}
+
+message Layer2Message {
+  Layer2Type type = 1;
+}
+
+enum Layer2Type {
+  Data = 0;
+}
+
+message HandshakeRequest {
+  string randomGraphId = 1;
+  string senderId = 2;
+  string requestId = 3;
+}
+
+message HandshakeResponse {
+  bool accepted = 1;
+  string requestId = 2;
+}
+
+message LeaveNotice {
+  string randomGraphId = 1;
+  string senderId = 2;
+}

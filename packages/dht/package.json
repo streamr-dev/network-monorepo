@@ -7,6 +7,7 @@
     "url": "git+https://github.com/streamr-dev/network-monorepo.git",
     "directory": "packages/dht"
   },
+  "main": "dist/src/index.js",
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "author": "Streamr Network AG <contact@streamr.network>",
   "scripts": {

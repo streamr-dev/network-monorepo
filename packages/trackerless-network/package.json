@@ -1,0 +1,50 @@
+{
+  "name": "@streamr/trackerless-network",
+  "version": "0.0.1",
+  "description": "Minimal and extendable implementation of the Streamr Network node.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streamr-dev/network-monorepo.git",
+    "directory": "packages/trackerless-network"
+  },
+  "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
+  "author": "Streamr Network AG <contact@streamr.network>",
+  "scripts": {
+    "sandbox": "ts-node src/index.ts",
+    "build": "tsc -b tsconfig.node.json",
+    "prebuild": "./proto.sh",
+    "check": "tsc -p ./tsconfig.jest.json --noEmit",
+    "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache src/proto || true",
+    "coverage": "jest --coverage",
+    "eslint": "eslint --cache --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
+    "prepare": "npm run build",
+    "test": "jest",
+    "test-unit": "jest test/unit"
+  },
+  "dependencies": {
+    "@protobuf-ts/plugin": "^2.4.0",
+    "@streamr/dht": "0.0.1",
+    "@streamr/proto-rpc": "1.1.1",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@streamr/dev-config": "^1.0.0",
+    "@types/lodash": "^4.14.175",
+    "@types/node": "^16.10.6",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^7.32.0",
+    "eslint-config-streamr-ts": "^4.0.1",
+    "eslint-plugin-promise": "^5.1.0",
+    "expect": "^27.0.2",
+    "jest": "^27.2.5",
+    "jest-circus": "^27.2.5",
+    "jest-extended": "^0.11.5",
+    "jest-mock": "^27.0.3",
+    "streamr-test-utils": "^2.0.0",
+    "ts-jest": "^27.0.5",
+    "ts-loader": "^9.2.6",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.5.2"
+  }
+}

@@ -143,7 +143,7 @@
         "reflect-metadata": "^0.1.13",
         "split2": "^3.2.2",
         "sqlite": "^4.0.23",
-        "sqlite3": "^5.0.3",
+        "sqlite3": "^5.0.8",
         "streamr-client-protocol": "^12.0.0",
         "streamr-network": "^35.0.0",
         "ts-toolbelt": "^9.6.0",

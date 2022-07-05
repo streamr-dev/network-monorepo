@@ -33,5 +33,5 @@ module.exports = {
 
     testPathIgnorePatterns: ["/browser/", "/node_modules/"],
 
-    setupFilesAfterEnv: ["jest-extended"],
+    setupFilesAfterEnv: ["jest-extended/all"],
 }

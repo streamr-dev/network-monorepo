@@ -9,7 +9,7 @@ export const staticLogger = new Logger(module)
 
 export class ServerWsConnection extends AbstractWsConnection {
 
-    private readyState: ReadyState = 1;
+    private readyState: ReadyState = 1
     constructor(private ownAddress: string,
         private ownPeerInfo: PeerInfo,
         private remoteAddress: string,

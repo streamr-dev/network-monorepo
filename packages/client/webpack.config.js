@@ -54,12 +54,7 @@ module.exports = (env, argv) => {
                             cacheDirectory: true,
                         }
                     }
-                },
-                {
-                    test: /(\.jsx|\.js|\.ts)$/,
-                    loader: 'eslint-loader',
-                    exclude: /(node_modules|streamr-client-protocol|dist)/, // excluding streamr-client-protocol makes build work when 'npm link'ed
-                },
+                }
             ],
         },
         resolve: {

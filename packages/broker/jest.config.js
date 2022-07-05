@@ -13,5 +13,5 @@ module.exports = {
     testRunner: 'jest-circus/runner',
     testEnvironment: 'node',
     testTimeout: 10000,
-    setupFilesAfterEnv: ["jest-extended"]
+    setupFilesAfterEnv: ["jest-extended/all"]
 }

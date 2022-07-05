@@ -1,6 +1,6 @@
 import pMemoize from 'p-memoize'
 import mem from 'mem'
-import LRU from '../../vendor/quick-lru'
+import LRU from 'quick-lru'
 
 type Collection<K, V> = {
     keys: Map<K, V>['keys']

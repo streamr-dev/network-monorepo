@@ -19,15 +19,13 @@
         }
     },
     "scripts": {
-        "build": "npm run bootstrap-dist && npm run build-node",
+        "build": "npm run build-node",
         "build-production": "npm run clean; npm run bootstrap-dist && NODE_ENV=production npm run build-node && npm run build-browser-production",
         "check": "tsc -p ./tsconfig.jest.json --noEmit",
-        "vendor": "SRCDIR=`node -p \"path.dirname(require.resolve('quick-lru'))\"` bash -c 'mkdir -p vendor/quick-lru; cp -n $SRCDIR/index.d.ts vendor/quick-lru; cp -n $SRCDIR/index.js vendor/quick-lru'; true",
         "copy-package": "mkdir -p dist/; node copy-package.js; cp -f README.md LICENSE readme-header-img.png dist; mkdir -p dist/src/encryption/migrations; cp -f ./src/encryption/migrations/* dist/src/encryption/migrations; true",
-        "bootstrap-dist": "npm run vendor && npm run copy-package && npm run fix-esm",
+        "bootstrap-dist": "npm run copy-package && npm run fix-esm",
         "fix-esm": "mkdir -p dist/src/; cp -Rf src/index-esm.mjs dist/src/index-esm.mjs",
         "build-node": "npm run bootstrap-dist && tsc --build ./tsconfig.node.json",
-        "postbuild-node": "npm run copy-package",
         "build-browser": "npm run bootstrap-dist && NODE_ENV=development webpack --mode=development --progress",
         "build-browser-production": "npm run bootstrap-dist && NODE_ENV=production webpack --mode=production --progress",
         "watch-browser": "npm run bootstrap-dist && webpack --progress --watch",
@@ -54,7 +52,7 @@
         "teardown-browser": "node -e 'http.request(\"http://localhost:8880/stop\").on(\"error\", () => {}).end()' || true",
         "test-browser-realtime": "npm run build-browser && concurrently -k --success=first 'node ./test/browser/server.js' 'sleep 5 && nightwatch --headless --verbose --timeout=30000 --config=nightwatch.conf.js ./test/browser/realtime.js'",
         "test-browser-resend": "npm run build-browser && concurrently -k --success=first 'node ./test/browser/server.js' 'sleep 5 && nightwatch --headless --verbose --timeout=30000 --config=nightwatch.conf.js ./test/browser/resend.js'",
-        "clean": "jest --clearCache || true; rm -rf dist vendor *.tsbuildinfo node_modules/.cache || true",
+        "clean": "jest --clearCache || true; rm -rf dist *.tsbuildinfo node_modules/.cache || true",
         "docs": "typedoc --options typedoc.js"
     },
     "engines": {
@@ -88,7 +86,6 @@
         "cors": "^2.8.5",
         "crypto-browserify": "^3.12.0",
         "eslint-config-airbnb": "^18.2.1",
-        "eslint-loader": "^4.0.2",
         "eslint-plugin-import": "^2.25.3",
         "ethers": "^5.4.7",
         "express": "^4.17.1",
@@ -101,7 +98,7 @@
         "process": "^0.11.10",
         "streamr-test-utils": "^2.0.0",
         "terser-webpack-plugin": "^5.2.5",
-        "ts-loader": "^9.2.6",
+        "ts-loader": "^9.3.1",
         "typedoc": "^0.22.5",
         "util": "^0.12.4",
         "weak-napi": "^2.0.2",

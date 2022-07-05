@@ -18,7 +18,7 @@ export const NodeWebSocketConnectionFactory: WebSocketConnectionFactory<NodeClie
 
 export class NodeClientWsConnection extends AbstractWsConnection {
     
-    private readyState: ReadyState = 1;
+    private readyState: ReadyState = 1
     
     constructor(private ownAddress: string, 
         private ownPeerInfo: PeerInfo, 

@@ -18,7 +18,7 @@ export type MessageChainOptions = {
     msgChainId?: string
 }
 
-export function getCachedMessageChain(cacheConfig: CacheConfig):
+export function getCachedMessageChain(cacheConfig?: CacheConfig):
     ((streamPartId: StreamPartID, msgChainOptions: MessageChainOptions) => MessageChain) & {
     clearMatching: (matchFn: (key: string) => boolean) => void
 } {

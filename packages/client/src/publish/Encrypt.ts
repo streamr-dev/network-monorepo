@@ -8,7 +8,7 @@ import { scoped, Lifecycle, inject, delay } from 'tsyringe'
 import { EncryptionUtil } from '../encryption/EncryptionUtil'
 
 @scoped(Lifecycle.ContainerScoped)
-export class Encrypt {
+export class Encrypt { // TODO remove this class
     private isStopped = false
 
     constructor(

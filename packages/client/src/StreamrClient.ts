@@ -361,12 +361,6 @@ export class StreamrClient implements Context {
 
     connect = pOnce(async () => {
         await this.node.startNode()
-        const tasks = [
-            this.publisher.start(),
-        ]
-
-        await Promise.allSettled(tasks)
-        await Promise.all(tasks)
     })
 
     destroy = pOnce(async () => {
@@ -374,7 +368,6 @@ export class StreamrClient implements Context {
         this.connect.reset() // reset connect (will error on next call)
         const tasks = [
             this.destroySignal.destroy().then(() => undefined),
-            this.publisher.stop(),
             this.subscriber.stop(),
             this.groupKeyStoreFactory.stop()
         ]

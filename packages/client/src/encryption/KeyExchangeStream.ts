@@ -89,7 +89,8 @@ export class KeyExchangeStream implements Context {
 
         return publishAndWaitForResponseMessage(
             () => this.publisher.publish(streamPartId, request.toArray(), {
-                messageType: request.messageType
+                messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
+                encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE
             }),
             matchFn,
             () => this.createSubscription(),

@@ -5,7 +5,6 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { counterId } from '../../src/utils/utils'
 import { StreamDefinition } from '../../src/types'
 
-import { Signal } from '../../src/utils/Signal'
 import { PublishMetadata } from '../../src/publish/Publisher'
 import { Pipeline } from '../../src/utils/Pipeline'
 import { PublishPipeline } from '../../src/publish/PublishPipeline'
@@ -66,8 +65,6 @@ type PublishTestMessageOptions = PublishManyOpts & {
     waitForLastCount?: number
     waitForLastTimeout?: number,
     retainMessages?: boolean
-    onSourcePipeline?: Signal<[Pipeline<PublishMetadata<any>>]>
-    onPublishPipeline?: Signal<[Pipeline<StreamMessage>]>
     afterEach?: (msg: StreamMessage) => Promise<void> | void
 }
 
@@ -78,9 +75,6 @@ export function publishTestMessagesGenerator(
     opts: PublishTestMessageOptions = {}
 ): Pipeline<StreamMessage<unknown>, StreamMessage<unknown>> {
     const source = new Pipeline(publishManyGenerator(maxMessages, opts))
-    if (opts.onSourcePipeline) {
-        opts.onSourcePipeline.trigger(source)
-    }
     const pipeline = new Pipeline<StreamMessage>(publishFromMetadata(streamDefinition, source, client))
     if (opts.afterEach) {
         pipeline.forEach(opts.afterEach)
@@ -113,9 +107,6 @@ export function getPublishTestStreamMessages(
             contents.set(streamMessage, streamMessage.serializedContent)
         })
         const publishStream = publishTestMessagesGenerator(client, streamDefinition, maxMessages, options)
-        if (opts.onPublishPipeline) {
-            opts.onPublishPipeline.trigger(publishStream)
-        }
         const streamMessages = []
         let count = 0
         for await (const streamMessage of publishStream) {

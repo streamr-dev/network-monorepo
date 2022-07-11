@@ -53,7 +53,7 @@ export interface MessageMetadata {
     encryptionType?: EncryptionType
 }
 
-// TODO better name? 
+// TODO better name?
 export type PublishMetadata<T = unknown> = MessageMetadata & {
     content: T
 }
@@ -68,7 +68,7 @@ export type PublishQueueIn<T = unknown> = [PublishMetadataStrict<T>, Deferred<St
 export type PublishQueueOut<T = unknown> = [StreamMessage<T>, Deferred<StreamMessage<T>>]
 
 @scoped(Lifecycle.ContainerScoped)
-export class PublishPipeline implements Context {
+export class PublishPipeline implements Context { // TODO: remove this class
     readonly id
     readonly debug
     /** takes metadata & creates stream messages. unsigned, unencrypted */

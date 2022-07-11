@@ -32,7 +32,7 @@ export type MessageCreateOptions<T = unknown> = {
  * Create StreamMessages from metadata.
  */
 @scoped(Lifecycle.ContainerScoped)
-export class MessageCreator {
+export class MessageCreator {  // TODO remove this class
     private queue: ReturnType<typeof LimitAsyncFnByKey>
     private getMsgChain
 

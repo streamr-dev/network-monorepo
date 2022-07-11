@@ -10,7 +10,7 @@ import { StreamRegistryCached } from '../registry/StreamRegistryCached'
 export type PartitionKey = string | number | undefined
 
 @scoped(Lifecycle.ContainerScoped)
-export class StreamPartitioner {
+export class StreamPartitioner {  // TODO remove this class
     constructor(
         private streamRegistryCached: StreamRegistryCached,
         @inject(ConfigInjectionToken.Cache) private cacheOptions: CacheConfig,

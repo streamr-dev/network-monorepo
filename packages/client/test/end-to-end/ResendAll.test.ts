@@ -14,7 +14,7 @@ const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 20000 : 10000
 
 jest.setTimeout(60000)
 
-describe('ResendAll', () => {
+describe.skip('ResendAll', () => { // TODO enable the test when it doesn't depend on PublishPipeline (via getPublishTestStreamMessages)
     let client: StreamrClient
     let stream: Stream
     let publishTestMessages: ReturnType<typeof getPublishTestStreamMessages>

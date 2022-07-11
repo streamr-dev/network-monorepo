@@ -63,6 +63,7 @@ export class EncryptionUtil {
     /*
      * Sets the content of 'streamMessage' with the encryption result of the old content with 'groupKey'.
      */
+    // TODO remove this method
     static encryptStreamMessage(streamMessage: StreamMessage, groupKey: GroupKey, nextGroupKey?: GroupKey): void {
         /* eslint-disable no-param-reassign */
         streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES

@@ -365,6 +365,7 @@ class OrderedMsgChain extends MsgChainEmitter {
                 }
             }
 
+            this.gapRequestCount = 0
             this.inOrderHandler(msg)
         } catch (err: any) {
             this.emit('error', err)

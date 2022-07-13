@@ -117,14 +117,6 @@
         "maxGapRequests": {
             "type": "number"
         },
-        "verifySignatures": {
-            "type": "string",
-            "enum": [
-                "auto",
-                "always",
-                "never"
-            ]
-        },
         "retryResendAfter": {
             "type": "number"
         },

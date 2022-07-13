@@ -40,14 +40,6 @@ describe('Config', () => {
                 }).toThrow('/network/acceptProxyConnections must be boolean')
             })
 
-            it('enum', () => {
-                expect(() => {
-                    return createStrictConfig({
-                        verifySignatures: 'foo'
-                    } as any)
-                }).toThrow('verifySignatures must be equal to one of the allowed values')
-            })
-
             it('ajv-format', () => {
                 expect(() => {
                     return createStrictConfig({

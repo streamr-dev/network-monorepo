@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove method `unsubscribeAll()`, use `unsubscribe()` without arguments instead
 - Remove client configuration option `client.network.name`
 - Remove `subscription.onMessage`, `onStart` and `onError` methods, use `subscription.on('error', cb)` to add an error listener
+- Remove client configuration option `verifySignatures`
 
 ### Fixed
 

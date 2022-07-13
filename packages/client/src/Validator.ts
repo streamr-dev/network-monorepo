@@ -6,7 +6,6 @@ import {
     StreamMessage,
     StreamMessageValidator,
     SigningUtil,
-    StreamMessageError,
     StreamID,
     EthereumAddress
 } from 'streamr-client-protocol'
@@ -17,12 +16,6 @@ import { CacheFn } from './utils/caches'
 import { Context } from './utils/Context'
 import { StreamRegistryCached } from './registry/StreamRegistryCached'
 import { ConfigInjectionToken, SubscribeConfig, CacheConfig } from './Config'
-
-export class SignatureRequiredError extends StreamMessageError {
-    constructor(streamMessage: StreamMessage, code?: string) {
-        super('Client requires data to be signed.', streamMessage, code)
-    }
-}
 
 /**
  * Wrap StreamMessageValidator in a way that ensures it can validate in parallel but
@@ -74,16 +67,6 @@ export class Validator extends StreamMessageValidator implements Context {
 
     orderedValidate = pOrderedResolve(async (msg: StreamMessage) => {
         if (this.isStopped) { return }
-        const { options } = this
-
-        // Check special cases controlled by the verifySignatures policy
-        if (options.verifySignatures === 'never' && msg.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE) {
-            return // no validation required
-        }
-
-        if (options.verifySignatures === 'always' && !msg.signature) {
-            throw new SignatureRequiredError(msg)
-        }
 
         // In all other cases validate using the validator
         // will throw with appropriate validation failure

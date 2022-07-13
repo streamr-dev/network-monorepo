@@ -44,7 +44,6 @@ export type SubscribeConfig = {
     orderMessages: boolean
     gapFill: boolean
     maxGapRequests: number
-    verifySignatures: 'auto' | 'always' | 'never'
     retryResendAfter: number
     gapFillTimeout: number
 }
@@ -124,7 +123,6 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientConfig = {
     maxGapRequests: 5,
 
     // Encryption options
-    verifySignatures: 'auto',
     encryptionKeys: {},
 
     // Ethereum related options

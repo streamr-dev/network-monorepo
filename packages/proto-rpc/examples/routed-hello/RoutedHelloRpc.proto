@@ -1,0 +1,14 @@
+syntax = "proto3";
+option optimize_for = CODE_SIZE;
+
+service RoutedHelloRpc {
+  rpc sayHello (RoutedHelloRequest) returns (RoutedHelloResponse);
+}
+
+message RoutedHelloRequest {
+    string myName = 1;
+  }
+  
+message RoutedHelloResponse {
+    string greeting = 1;
+  }

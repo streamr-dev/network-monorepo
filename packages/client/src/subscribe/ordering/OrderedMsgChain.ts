@@ -72,7 +72,7 @@ class MsgChainQueue {
     peek() {
         if (this.isEmpty()) { return }
         const ref = this.queue.peek()
-        return this.pendingMsgs.get(ref)
+        return this.pendingMsgs.get(ref as MessageRef)
     }
 
     /**

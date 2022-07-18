@@ -81,11 +81,11 @@ export class MessageQueue<M> {
     }
 
     peek(): QueueItem<M> {
-        return this.heap.peek()
+        return this.heap.peek() as QueueItem<M>
     }
 
     pop(): QueueItem<M> {
-        return this.heap.pop()
+        return this.heap.pop() as QueueItem<M>
     }
 
     size(): number {

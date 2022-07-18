@@ -1,0 +1,14 @@
+{
+    "extends": "../../tsconfig.node.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "noImplicitOverride": false
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "references": [
+        { "path": "../utils/tsconfig.node.json" },
+        { "path": "../test-utils/tsconfig.node.json" }
+    ]
+}

@@ -1,0 +1,8 @@
+.DS_Store
+node_modules
+dist
+google
+src/proto
+coverage
+test/kademlia-simulation/data/nodeids.json
+test/kademlia-simulation/data/orderedneighbors.json

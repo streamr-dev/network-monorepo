@@ -1,0 +1,14 @@
+node_modules/**
+coverage/**
+dist/**
+streamr-docker-dev/**
+docs/**
+.idea/**
+src/proto/**
+test/proto/**
+examples/hello/HelloRpc*
+examples/hello/proto/**
+examples/routed-hello/HelloRpc*
+examples/routed-hello/proto/**
+examples/wakeup/proto/**
+examples/errors/proto/**

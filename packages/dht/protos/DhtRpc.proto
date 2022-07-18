@@ -1,0 +1,186 @@
+syntax = "proto3";
+option optimize_for = CODE_SIZE;
+
+import "google/protobuf/empty.proto";
+
+service DhtRpc {
+  rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
+  rpc ping (PingRequest) returns (PingResponse);
+  rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
+}
+
+service WebSocketConnector {
+  rpc requestConnection (WebSocketConnectionRequest) returns (WebSocketConnectionResponse);
+}
+
+service WebRtcConnector {
+  rpc requestConnection (WebRtcConnectionRequest) returns (google.protobuf.Empty);
+  rpc rtcOffer (RtcOffer) returns (google.protobuf.Empty);
+  rpc rtcAnswer (RtcAnswer) returns (google.protobuf.Empty);
+  rpc iceCandidate (IceCandidate) returns (google.protobuf.Empty);
+}
+
+// Used inside RpcMessage
+
+message ClosestPeersRequest {
+  PeerDescriptor peerDescriptor = 1;
+  string nonce = 2; // requestId
+}
+
+message ClosestPeersResponse {
+  repeated PeerDescriptor peers = 1;
+  string nonce = 2; // requestId
+}
+
+message PingRequest {
+  string nonce = 1;
+}
+
+message PingResponse {
+  string nonce = 1;
+}
+
+message PeerDescriptor {
+  bytes peerId = 1;
+  NodeType type = 2;
+  ConnectivityMethod udp = 3;
+  ConnectivityMethod tcp = 4;
+  ConnectivityMethod websocket = 5;
+  optional bool openInternet = 6;
+}
+
+message ConnectivityMethod {
+  uint32 port = 2;
+  string ip = 3;
+}
+
+enum NodeType {
+  NODEJS = 0;
+  BROWSER = 1;
+}
+
+message ConnectivityReportRequest {
+  uint32 port = 1;
+  string nonce = 2; // requestId
+}
+
+message ConnectivityReportResponse {
+  string open_internet = 1;
+  string ip = 2;
+  string natType = 3;
+  string nonce = 4; // requestId
+}
+
+enum RpcResponseError {
+  SERVER_TIMOUT = 0;
+  CLIENT_TIMEOUT = 1;
+  SERVER_ERROR = 2;
+  UNKNOWN_RPC_METHOD = 3;
+}
+
+message RouteMessageWrapper {
+  PeerDescriptor sourcePeer = 1;
+  string nonce = 2;
+  PeerDescriptor destinationPeer = 3;
+  PeerDescriptor previousPeer = 4;
+  bytes message = 5; // Expected to be of type Message
+}
+
+message RouteMessageAck {
+  PeerDescriptor sourcePeer = 1;
+  string nonce = 2;
+  PeerDescriptor destinationPeer = 3;
+  string error = 4;
+}
+
+// Correspond to the MessageType Enum
+
+message ConnectivityRequestMessage {
+  uint32 port = 1;
+}
+
+message ConnectivityResponseMessage {
+  bool open_internet = 1;
+  string ip = 2;
+  string natType = 3;
+  ConnectivityMethod websocket = 4;
+}
+
+message HandshakeMessage {
+  bytes sourceId = 1;
+  string protocolVersion = 2;
+  PeerDescriptor peerDescriptor = 3;
+}
+
+message RpcMessage {
+  map<string, string> header = 1;
+  bytes body = 2;
+  string requestId = 3;
+  optional RpcResponseError responseError = 4;
+}
+
+// Wraps all messages
+
+enum MessageType {
+  CONNECTIVITY_REQUEST = 0;
+  CONNECTIVITY_RESPONSE = 1;
+  HANDSHAKE = 2;
+  RPC = 3;
+  WEBSOCKET_CONNECTOR = 4;
+  WEBRTC_CONNECTOR = 5;
+}
+
+message Message {
+  string messageId = 1;
+  MessageType messageType = 2;
+  PeerDescriptor sourceDescriptor = 3;
+  PeerDescriptor targetDescriptor = 4;
+  string appId = 5; // application-specific id
+  bytes body = 6;
+}
+
+// Connector Messages
+
+// WebSocket
+message WebSocketConnectionRequest {
+  PeerDescriptor requester = 1;
+  PeerDescriptor target = 2;
+  string ip = 3;
+  uint32 port = 4;
+}
+
+message WebSocketConnectionResponse {
+  PeerDescriptor requester = 1;
+  PeerDescriptor target = 2;
+  bool accepted = 3;
+  optional string reason = 4;
+}
+
+// WebRTC
+message WebRtcConnectionRequest {
+  PeerDescriptor requester = 1;
+  PeerDescriptor target = 2;
+  string connectionId = 3;
+}
+
+message RtcOffer {
+  PeerDescriptor requester = 1;
+  PeerDescriptor target = 2;
+  string description = 3;
+  string connectionId = 4;
+}
+
+message RtcAnswer {
+  PeerDescriptor requester = 1;
+  PeerDescriptor target = 2;
+  string description = 3;
+  string connectionId = 4;
+}
+
+message IceCandidate {
+  string candidate = 1;
+  string mid = 2;
+  string connectionId = 3;
+  PeerDescriptor requester = 4;
+  PeerDescriptor target = 5;
+}

@@ -104,7 +104,7 @@ export class Storage extends EventEmitter {
                     this.pendingStores.delete(uuid)
                     // eslint-disable-next-line promise/catch-or-return
                     this.store(streamMessage).then(resolve, reject)
-                }, this.opts.retriesIntervalMilliseconds)
+                }, this.opts.retriesIntervalMilliseconds!)
                 this.pendingStores.set(uuid, timeout)
             }
         })

@@ -1,0 +1,19 @@
+{
+    "extends": "../../tsconfig.jest.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "noImplicitOverride": false
+    },
+    "include": [
+        "src/**/*",
+        "test/**/*"
+    ],
+    "exclude": [
+        "src/connection/WebRTC/BrowserWebRtcConnection.ts"
+    ],  
+    "references": [
+        { "path": "../utils/tsconfig.node.json" },
+        { "path": "../test-utils/tsconfig.node.json" },
+        { "path": "../proto-rpc/tsconfig.node.json" }
+    ]
+}

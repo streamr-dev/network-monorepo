@@ -25,6 +25,8 @@ runs:
         path: |
           packages/*/dist
           packages/client/vendor
+          packages/proto-rpc/src/proto
+          packages/dht/src/proto
     - name: ci
       if: steps.cache-node-modules.outputs.cache-hit != 'true'
       run: npm ci --no-audit

@@ -19,6 +19,10 @@ tracker:
   - 'packages/network-tracker/*'
   - 'packages/network-tracker/**/*'
   - '.github/workflows/network-tracker.yml'
+dht:
+  - 'packages/dht/*'
+  - 'packages/dht/**/*'
+  - '.github/workflows/dht.yml'
 client:
   - 'packages/client/*'
   - 'packages/client/**/*'

@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+option optimize_for = CODE_SIZE;
+
+service DhtRpc {
+  rpc getClosestPeers (ClosestPeersRequest) returns (ClosestPeersResponse);
+  rpc ping (PingRequest) returns (PingResponse);
+  rpc routeMessage (RouteMessageWrapper) returns (RouteMessageAck);
+}
+
+message RouteMessageWrapper {
+  PeerDescriptor sourcePeer = 1;
+  string nonce = 2;
+  PeerDescriptor destinationPeer = 3;
+  PeerDescriptor previousPeer = 4;
+  bytes message = 5; // Expected to be of type Message
+}
+
+message RouteMessageAck {
+  PeerDescriptor sourcePeer = 1;
+  string nonce = 2;
+  PeerDescriptor destinationPeer = 3;
+  string error = 4;
+}
+
+message PingRequest {
+    string nonce = 1;
+  }
+  
+message PingResponse {
+    string nonce = 1;
+  }
+
+message ClosestPeersRequest {
+    PeerDescriptor peerDescriptor = 1;
+    string nonce = 2; // requestId
+  }
+  
+message ClosestPeersResponse {
+    repeated PeerDescriptor peers = 1;
+    string nonce = 2; // requestId
+  }
+
+message PeerDescriptor {
+    bytes peerId = 1;
+    NodeType type = 2;
+    ConnectivityMethod udp = 3;
+    ConnectivityMethod tcp = 4;
+    ConnectivityMethod websocket = 5;
+    optional bool openInternet = 6;
+  }
+  
+  message ConnectivityMethod {
+    uint32 port = 2;
+    string ip = 3;
+  }
+  
+  enum NodeType {
+    NODEJS = 0;
+    BROWSER = 1;
+  }

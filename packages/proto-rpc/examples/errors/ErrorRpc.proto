@@ -1,0 +1,16 @@
+syntax = "proto3";
+option optimize_for = CODE_SIZE;
+
+service ErrorRpc {
+  rpc timeout (HelloRequest) returns (HelloResponse);
+  rpc serverError (HelloRequest) returns (HelloResponse);
+  rpc unknownMethod (HelloRequest) returns (HelloResponse);
+}
+
+message HelloRequest {
+  string myName = 1;
+}
+  
+message HelloResponse {
+  string greeting = 1;
+}

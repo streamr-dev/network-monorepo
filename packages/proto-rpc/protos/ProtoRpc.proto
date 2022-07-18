@@ -1,0 +1,25 @@
+syntax = "proto3";
+option optimize_for = CODE_SIZE;
+
+import "google/protobuf/empty.proto";
+
+enum RpcResponseError {
+    SERVER_TIMOUT = 0;
+    CLIENT_TIMEOUT = 1;
+    SERVER_ERROR = 2;
+    UNKNOWN_RPC_METHOD = 3;
+  }
+
+message RpcMessage {
+    map<string, string> header = 1;
+    bytes body = 2;
+    string requestId = 3;
+    optional RpcResponseError responseError = 4;
+  }
+
+// Dummy message to force the generation of the typescript class "google.prototype.Empty"
+// We need this generated class in RpcCommunicator
+
+message Mnfo2uhnf92hvqi2nviouq2hv9puhq {
+  google.protobuf.Empty empty = 1;
+}

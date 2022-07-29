@@ -13,6 +13,7 @@ import { DestroySignal } from './DestroySignal'
 import { EthereumConfig, generateEthereumAccount, getMainnetProvider } from './Ethereum'
 import { getTrackerRegistryFromContract } from './registry/getTrackerRegistryFromContract'
 import { Authentication, AuthenticationInjectionToken } from './Authentication'
+import { createSigners } from './utils/createSigners'
 
 // TODO should we make getNode() an internal method, and provide these all these services as client methods?
 export interface NetworkNodeStub {
@@ -32,11 +33,6 @@ export interface NetworkNodeStub {
     getMetricsContext: () => MetricsContext
     hasStreamPart: (streamPartId: StreamPartID) => boolean
     hasProxyConnection: (streamPartId: StreamPartID, contactNodeId: string, direction: ProxyDirection) => boolean
-}
-
-export const getEthereumAddressFromNodeId = (nodeId: string): string => {
-    const ETHERUM_ADDRESS_LENGTH = 42
-    return nodeId.substring(0, ETHERUM_ADDRESS_LENGTH)
 }
 
 /**
@@ -107,7 +103,8 @@ export class BrubeckNode implements Context {
             disconnectionWaitTime: 200,
             ...networkOptions,
             id,
-            metricsContext: new MetricsContext()
+            metricsContext: new MetricsContext(),
+            signers: createSigners(this.authentication)
         })
 
         if (!this.destroySignal.isDestroyed()) {

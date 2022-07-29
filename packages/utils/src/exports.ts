@@ -1,3 +1,4 @@
+import { DebouncedTaskManager } from './DebouncedTaskManager'
 import { keyToArrayIndex } from './keyToArrayIndex'
 import { Logger } from './Logger'
 import { Multimap } from './Multimap'
@@ -11,6 +12,7 @@ import { TimeoutError, withTimeout } from './withTimeout'
 
 export {
     BrandedString,
+    DebouncedTaskManager,
     Logger,
     Multimap,
     TimeoutError,

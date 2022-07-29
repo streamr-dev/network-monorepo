@@ -12,9 +12,11 @@ import NodeClientWsEndpoint from './connection/ws/NodeClientWsEndpoint'
 import { WebRtcEndpoint } from './connection/webrtc/WebRtcEndpoint'
 import { webRtcConnectionFactory } from './connection/webrtc/NodeWebRtcConnection'
 import { SmartContractRecord } from 'streamr-client-protocol'
+import { Signers } from './logic/receipts/SignatureFunctions'
 
 export interface NetworkNodeOptions extends AbstractNodeOptions {
     trackers: SmartContractRecord[]
+    signers?: Signers
     disconnectionWaitTime?: number
     peerPingInterval?: number
     newWebrtcConnectionTimeout?: number
@@ -31,6 +33,7 @@ export const createNetworkNode = ({
     id = uuidv4(),
     location,
     trackers,
+    signers,
     metricsContext = new MetricsContext(),
     peerPingInterval,
     trackerPingInterval,
@@ -67,6 +70,7 @@ export const createNetworkNode = ({
     return new NetworkNode({
         peerInfo,
         trackers,
+        signers,
         protocols: {
             nodeToTracker,
             nodeToNode

@@ -2,9 +2,10 @@ import { scoped, Lifecycle, inject } from 'tsyringe'
 import { StreamrClientEventEmitter } from './events'
 import { DestroySignal } from './DestroySignal'
 import { MetricsReport } from 'streamr-network'
-import { BrubeckNode, getEthereumAddressFromNodeId } from './BrubeckNode'
+import { BrubeckNode } from './BrubeckNode'
 import { Publisher } from './publish/Publisher'
 import { ConfigInjectionToken, MetricsPeriodConfig, StrictStreamrClientConfig } from './Config'
+import { getEthereumAddressFromNodeId } from './utils/utils'
 
 const DEFAULT_PERIODS = [ 
     {

@@ -12,7 +12,9 @@ export enum ControlMessageType {
     ErrorResponse = 7,
     UnsubscribeRequest = 10,
     ProxyConnectionRequest = 14,
-    ProxyConnectionResponse = 15
+    ProxyConnectionResponse = 15,
+    ReceiptRequest = 16,
+    ReceiptResponse = 17
 }
 
 export interface ControlMessageOptions {

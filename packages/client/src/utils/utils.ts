@@ -98,3 +98,8 @@ export const getEndpointUrl = (baseUrl: string, ...pathParts: string[]): string 
 export function formStorageNodeAssignmentStreamId(clusterAddress: EthereumAddress): StreamID {
     return toStreamID('/assignments', clusterAddress)
 }
+
+export const getEthereumAddressFromNodeId = (nodeId: string): string => {
+    const ETHERUM_ADDRESS_LENGTH = 42
+    return nodeId.substring(0, ETHERUM_ADDRESS_LENGTH)
+}

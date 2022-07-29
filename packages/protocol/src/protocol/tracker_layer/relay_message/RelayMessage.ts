@@ -5,12 +5,15 @@ import {
 } from '../../../utils/validations'
 import TrackerMessage, { TrackerMessageOptions } from '../TrackerMessage'
 import { Originator } from "../Originator"
+import { Receipt } from '../../control_layer'
 
 export enum RelayMessageSubType {
     RTC_OFFER = 'rtcOffer',
     RTC_ANSWER = 'rtcAnswer',
     RTC_CONNECT = 'rtcConnect',
     ICE_CANDIDATE = 'iceCandidate',
+    INSPECT_REQUEST = 'inspectRequest',
+    INSPECT_RESPONSE_PART = 'inspectResponsePart'
 }
 
 export interface RtcOfferMessage {
@@ -42,6 +45,23 @@ export interface RtcIceCandidateMessage {
     }
 }
 
+export interface InspectRequestMessage {
+    subType: RelayMessageSubType.INSPECT_REQUEST
+    data: {
+        inspectionTarget: string
+    }
+}
+
+export interface InspectResponsePartMessage {
+    subType: RelayMessageSubType.INSPECT_RESPONSE_PART
+    data: {
+        receipt: Receipt
+        done: false
+    } | {
+        done: true
+    }
+}
+
 export interface SharedOptions extends TrackerMessageOptions {
     originator: Originator
     targetNode: string
@@ -49,7 +69,14 @@ export interface SharedOptions extends TrackerMessageOptions {
     data: object
 }
 
-export type Options = SharedOptions & (RtcOfferMessage | RtcAnswerMessage | RtcConnectMessage | RtcIceCandidateMessage)
+export type Options = SharedOptions & (
+    RtcOfferMessage
+    | RtcAnswerMessage
+    | RtcConnectMessage
+    | RtcIceCandidateMessage
+    | InspectRequestMessage
+    | InspectResponsePartMessage
+)
 
 export default class RelayMessage extends TrackerMessage {
     originator: Originator
@@ -85,6 +112,14 @@ export default class RelayMessage extends TrackerMessage {
 
     isIceCandidateMessage(): this is RtcIceCandidateMessage {
         return this.subType === RelayMessageSubType.ICE_CANDIDATE
+    }
+
+    isInspectRequestMessage(): this is InspectRequestMessage {
+        return this.subType === RelayMessageSubType.INSPECT_REQUEST
+    }
+
+    isInspectResponsePartMessage(): this is InspectResponsePartMessage {
+        return this.subType === RelayMessageSubType.INSPECT_RESPONSE_PART
     }
 
 }

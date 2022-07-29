@@ -198,7 +198,7 @@ describe('delivery of messages in protocol layer', () => {
 
         })
         trackerServer.send('node1', sentMessage)
-        
+
         const [msg, source] = await messagePromise
 
         expect(msg).toBeInstanceOf(RelayMessage)

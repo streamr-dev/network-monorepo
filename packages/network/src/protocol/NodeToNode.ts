@@ -2,9 +2,13 @@ import { EventEmitter } from 'events'
 import {
     BroadcastMessage,
     ControlMessage,
+    ErrorResponse,
     ProxyConnectionRequest,
     ProxyConnectionResponse,
-    ProxyDirection, StreamMessage,
+    ProxyDirection,
+    ReceiptRequest,
+    ReceiptResponse,
+    StreamMessage,
     StreamPartID,
     StreamPartIDUtils,
     UnsubscribeRequest
@@ -14,6 +18,7 @@ import { decode } from './utils'
 import { IWebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/webrtc/IWebRtcEndpoint'
 import { PeerInfo } from '../connection/PeerInfo'
 import { Rtts, NodeId } from "../identifiers"
+import { ResponseAwaiter } from './ResponseAwaiter'
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node-node:node-connected',
@@ -23,7 +28,11 @@ export enum Event {
     HIGH_BACK_PRESSURE = 'streamr:node-node:high-back-pressure',
     PROXY_CONNECTION_REQUEST_RECEIVED = 'node-node:publish-only-stream-request-received',
     PROXY_CONNECTION_RESPONSE_RECEIVED = 'node-node:publish-only-stream-response-received',
-    LEAVE_REQUEST_RECEIVED = 'node-node:leave-request-received'
+    RECEIPT_REQUEST_RECEIVED = 'node-node:receipt-request-received',
+    RECEIPT_RESPONSE_RECEIVED = 'node-node:receipt-response-received',
+    ERROR_RESPONSE_RECEIVED = 'node-node:error-response-received',
+    LEAVE_REQUEST_RECEIVED = 'node-node:leave-request-received',
+    BROADCAST_MESSAGE_SENT = 'node-node:broadcast-message-sent'
 }
 
 const eventPerType: Record<number, string> = {}
@@ -31,6 +40,9 @@ eventPerType[ControlMessage.TYPES.BroadcastMessage] = Event.DATA_RECEIVED
 eventPerType[ControlMessage.TYPES.ProxyConnectionRequest] = Event.PROXY_CONNECTION_REQUEST_RECEIVED
 eventPerType[ControlMessage.TYPES.ProxyConnectionResponse] = Event.PROXY_CONNECTION_RESPONSE_RECEIVED
 eventPerType[ControlMessage.TYPES.UnsubscribeRequest] = Event.LEAVE_REQUEST_RECEIVED
+eventPerType[ControlMessage.TYPES.ReceiptRequest] = Event.RECEIPT_REQUEST_RECEIVED
+eventPerType[ControlMessage.TYPES.ReceiptResponse] = Event.RECEIPT_RESPONSE_RECEIVED
+eventPerType[ControlMessage.TYPES.ErrorResponse] = Event.ERROR_RESPONSE_RECEIVED
 
 export interface NodeToNode {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
@@ -42,23 +54,32 @@ export interface NodeToNode {
        listener: (message: ProxyConnectionRequest, nodeId: NodeId) => void): this
     on(event: Event.PROXY_CONNECTION_RESPONSE_RECEIVED,
        listener: (message: ProxyConnectionResponse, nodeId: NodeId) => void): this
+    on(event: Event.RECEIPT_REQUEST_RECEIVED,
+       listener: (message: ReceiptRequest, nodeId: NodeId) => void): this
+    on(event: Event.RECEIPT_RESPONSE_RECEIVED,
+       listener: (message: ReceiptResponse, nodeId: NodeId) => void): this
+    on(event: Event.ERROR_RESPONSE_RECEIVED,
+       listener: (message: ErrorResponse, nodeId: NodeId) => void): this
     on(event: Event.LEAVE_REQUEST_RECEIVED,
        listener: (message: UnsubscribeRequest, nodeId: NodeId) => void): this
+    on(event: Event.BROADCAST_MESSAGE_SENT, listener: (message: BroadcastMessage, recipient: NodeId) => void): this
 }
 
 export class NodeToNode extends EventEmitter {
     private readonly endpoint: IWebRtcEndpoint
+    private readonly responseAwaiter: ResponseAwaiter<ControlMessage>
     private readonly logger: Logger
 
     constructor(endpoint: IWebRtcEndpoint) {
         super()
         this.endpoint = endpoint
+        this.responseAwaiter = new ResponseAwaiter<ControlMessage>(this, [Event.ERROR_RESPONSE_RECEIVED])
+        this.logger = new Logger(module)
         endpoint.on(WebRtcEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
         endpoint.on(WebRtcEndpointEvent.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo))
         endpoint.on(WebRtcEndpointEvent.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
         endpoint.on(WebRtcEndpointEvent.LOW_BACK_PRESSURE, (peerInfo) => this.onLowBackPressure(peerInfo))
         endpoint.on(WebRtcEndpointEvent.HIGH_BACK_PRESSURE, (peerInfo) => this.onHighBackPressure(peerInfo))
-        this.logger = new Logger(module)
     }
 
     connectToNode(
@@ -69,11 +90,22 @@ export class NodeToNode extends EventEmitter {
         return this.endpoint.connect(receiverNodeId, trackerAddress, trackerInstructed)
     }
 
-    sendData(receiverNodeId: NodeId, streamMessage: StreamMessage): Promise<BroadcastMessage> {
-        return this.send(receiverNodeId, new BroadcastMessage({
+    async sendData(receiverNodeId: NodeId, streamMessage: StreamMessage): Promise<BroadcastMessage> {
+        const broadcastMessage = await this.send(receiverNodeId, new BroadcastMessage({
             requestId: '', // TODO: how to echo here the requestId of the original SubscribeRequest?
             streamMessage,
         }))
+        this.emit(Event.BROADCAST_MESSAGE_SENT, broadcastMessage, receiverNodeId)
+        return broadcastMessage
+    }
+
+    registerErrorHandler(requestId: string, errorHandler: (errorResponse: ErrorResponse, source: NodeId) => void): void {
+        this.responseAwaiter.register(requestId, (msg, source) => {
+            if (msg instanceof ErrorResponse) {
+                errorHandler(msg, source)
+            }
+            return true
+        })
     }
 
     send<T>(receiverNodeId: NodeId, message: T & ControlMessage): Promise<T> {

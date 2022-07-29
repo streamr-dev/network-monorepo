@@ -3,8 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import {
     ErrorMessage,
     InstructionMessage,
-    RelayMessage, StatusMessage,
-    StreamPartID,
+    RelayMessage, StatusMessage, StreamPartID,
     StreamPartIDUtils,
     TrackerMessage,
     TrackerMessageType
